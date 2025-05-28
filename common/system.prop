@@ -1,0 +1,104 @@
+#fps
+ro.vendor.dfps.enable=false
+
+# GPU Turbo Boost system properties
+debug.gpu.renderscript.load_store_texture=1
+debug.enabletr=true
+debug.gr.numframebuffers=5
+debug.egl.buffcount=5
+debug.hwui.level=0
+debug.overlayui.enable=1
+debug.performance.tuning=1
+hw3d.force=1
+persist.sys.ui.hw=1
+ro.config.enable.hw_accel=true
+ro.fb.mode=1
+video.accelerate.hw=1
+
+# HWUI
+debug.hwui.app_memory_policy=aggresive
+debug.hwui.optimized_texture_upload=true
+debug.hwui.use_gpu_pixel_buffers=1
+debug.hwui.disable_vsync=true
+
+# Reduce Texture
+ro.hwui.texture_cache_flushrate=0.4
+ro.texture_atlas_cache_override=0.25
+ro.texture_atlas_cache_entry_override=0.034
+ro.texture_atlas_map_pool_override=0.15
+
+# Disable 4xmsaa
+debug.egl.disable_msaa=true
+debug.egl.disable_msaa=1
+camera.debug.logfile=0
+#disable cpu vysnc
+debug.cpurend.vsync=false
+hwui.disable_vsync=true
+
+# Memory properties
+ro.vendor.qti.sys.fw.bservice_enable=true
+
+# More RAM
+persist.service.pcsync.enable=0
+persist.service.lgospd.enable=0
+
+# Allow purge of assets to free more ram
+persist.sys.purgeable_assets=1
+
+# Property to enable app trigger
+ro.vendor.at_library=libqti-at.so
+persist.vendor.qti.games.gt.prof=1
+
+# Memory Optimization
+ro.sys.fw.bservice_enable=true
+ro.sys.fw.bservice_limit=128
+ro.sys.fw.bservice_age=10000
+ro.sys.fw.bg_apps_limit=256
+ro.vendor.qti.sys.fw.bservice_enable=true
+ro.vendor.qti.sys.fw.bservice_limit=128
+ro.vendor.qti.sys.fw.bservice_age=10000
+ro.vendor.qti.sys.fw.bg_apps_limit=256
+
+#tweak
+persist.sys.NV_FPSLIMIT=120
+persist.sys.NV_POWERMODE=1
+persist.sys.NV_PROFVER=15
+persist.sys.NV_STEREOCTRL=0
+persist.sys.NV_STEREOSEPCHG=0
+persist.sys.NV_STEREOSEP=30
+
+# SkiaGL Render
+debug.hwui.renderer=skiagl
+debug.renderengine.backend=skiaglthreaded
+ro.hwui.hardware.skiaglthreaded=true
+ro.hwui.use_skiaglthreaded=true
+ro.ui.pipeline=skiaglthreaded
+
+#Skia tracing disabler
+debug.hwui.render_dirty_regions=false
+debug.hwui.pipeline=false
+debug.hwui.overdraw=false
+debug.hwui.skia_atrace_enabled=false
+renderthread.skia.reduceopstasksplitting=true
+
+# Thermal Control
+debug.thermal.throttle.support=false
+persist.sys.thermal.disabled=true
+persist.sys.overlay.thermal.disable=true
+persist.sys.vendor.thermal.disable=true
+
+# Remove thermal
+ro.config.cpu_thermal_throttling=false
+ro.mtk.removethermal=true
+ro.removethermal.remove=true
+ro.sys.thermal=0
+ro.sys.thermal.disable=1
+ro.thermals.off=true
+ro.thermal.throttle=0
+
+# QuickPower
+ro.config.hw_quickpoweron=true
+
+# Disable Unnecessary 
+ro.hwui.disable_scissor_opt=false
+ro.zygote.disable_gl_preload=true
