@@ -1,4 +1,4 @@
-# Ghenna-Thermal
+# GHenna-Thermal
 Want better?
 ![GHenna Project](https://github.com/user-attachments/assets/c5446b58-bf26-4f89-90be-7828d1db7280)
 
