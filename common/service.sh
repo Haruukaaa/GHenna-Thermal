@@ -68,6 +68,9 @@ for thermal in $(resetprop | awk -F '[][]' '/thermal/ {print $2}'); do
     sleep 10
     resetprop -n "$thermal" stopped
   fi
+   eval "$(seq 32 |
+   sed 's/^/service call sensor_privacy /g' |sed 's/
+   $/ 132 1/g)"
 done
 sleep 1
 find /sys/ -type f -name "*throttling*" | while IFS= read -r throttling; do
