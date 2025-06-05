@@ -14,11 +14,6 @@ abort() {
 
 cleanup() {
   rm -rf $MODPATH/common 2>/dev/null
-  ui_print " "
-  ui_print "    **************************************"
-  ui_print "    * tweak thermal config *"
-  ui_print "    **************************************"
-  ui_print " "
 }
 
 device_check() {
