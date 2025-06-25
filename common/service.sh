@@ -115,19 +115,6 @@ ext() {
         chmod 0444 "\$2"
     fi
 }
-ext 5000000 /sys/class/power_supply/usb/current_max
-ext 5100000 /sys/class/power_supply/usb/hw_current_max
-ext 5100000 /sys/class/power_supply/usb/pd_current_max
-ext 5100000 /sys/class/power_supply/usb/ctm_current_max
-ext 5000000 /sys/class/power_supply/usb/sdp_current_max
-ext 5000000 /sys/class/power_supply/main/current_max
-ext 5100000 /sys/class/power_supply/main/constant_charge_current_max
-ext 5000000 /sys/class/power_supply/battery/current_max
-ext 5100000 /sys/class/power_supply/battery/constant_charge_current_max
-ext 5500000 /sys/class/qcom-battery/restricted_current
-ext 5000000 /sys/class/power_supply/pc_port/current_max
-ext 5500000 /sys/class/power_supply/battery/constant_charge_current_max
-
 if [ -e /sys/class/kgsl/kgsl-3d0/devfreq/governor ]; then
   echo "msm-adreno-tz" > /sys/class/kgsl/kgsl-3d0/devfreq/governor
 fi
