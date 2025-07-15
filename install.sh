@@ -14,9 +14,9 @@ print_modname() {
   sleep 1
   ui_print "Codename           : Kafka               "
   sleep 1
-  ui_print "Created            : Hirauki"
+  ui_print "Created            : Haruka"
   sleep 1
-  ui_print "Publisher          : Hirauki"
+  ui_print "Publisher          : Haruka"
   sleep 1
   ui_print "Update             : https://t.me/hgane_rei"
   sleep 1
