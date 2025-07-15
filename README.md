@@ -3,7 +3,7 @@ Want better?
 ![GHenna Project](https://github.com/user-attachments/assets/c5446b58-bf26-4f89-90be-7828d1db7280)
 
 ## **📫 Contacts**
-<a>**Please Contact me on Telegram for a any report about this project** [Hirauki Disscussion](https://t.me/higanediscussion)
+<a>**Please Contact me on Telegram for a any report about this project** [Haruka Disscussion](https://t.me/higanediscussion)
 <img align="left" width="100" src="https://github.com/user-attachments/assets/d34d2262-b22f-4ffd-8a3f-42ffcc2c1dcf">
 If you didn't get response by me, Tag me once per time, and i'll response it.
 </a>
