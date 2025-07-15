@@ -76,7 +76,6 @@ on_install() {
   unzip -o "$ZIPFILE" 'system/*' -d $MODPATH >&2
   unzip -o "$ZIPFILE" 'service.sh' -d $MODPATH >&2
   unzip -o "$ZIPFILE" 'module.prop' -d $MODPATH >&2
-  sleep 2
 }
 
 # Only some special files require specific permissions
@@ -89,6 +88,11 @@ set_permissions() {
   set_perm $MODPATH/service.sh 0 0 0777
   set_perm $MODPATH/system/etc/.nth_fc/.fc_lib 0 0 0777
   set_perm $MODPATH/system/etc/.nth_fc/.fc_main.sh 0 0 0777
+  set_perm_recursive $MODPATH/system/lib 0 0 0755 0644
+  set_perm_recursive $MODPATH/system/vendor/lib/soundfx 0 0 0755 0644
+  set_perm $MODPATH/system/lib/libart.so 0 0 0644
+  set_perm /data/local/tmp/file.txt 0 0 644
+
   
     # Here are some examples:
   # set_perm_recursive  $MODPATH/system/lib       0     0       0755      0644
@@ -98,14 +102,3 @@ set_permissions() {
 }
 
 # You can add more functions to assist your custom script code
-REPLACE="
-/system/vendor/etc/thermal-engine-map.conf
-/system/vendor/etc/thermal-engine.conf
-/system/vendor/etc/thermal-engine-normal.conf
-/system/vendor/etc/thermal-engine-sgame.conf
-/system/vendor/etc/thermal-engine-pubgmhd.conf
-/system/vendor/etc/perf/commonresourceconfigs.xml
-/system/vendor/etc/perf/perfboostsconfig.xml
-/system/vendor/etc/perf/targetconfig.xml
-/system/vendor/etc/perf/targetresourceconfigs.xml
-"
