@@ -13,7 +13,7 @@ If you didn't get response by me, Tag me once per time, and i'll response it.
 But for global like paypal, ko-fi, i can't make it because i don't have card.
 <img align="left" width="100" src="https://github.com/user-attachments/assets/7b903660-2e5c-42e7-b3f5-5f98faaca650">
 
-[Trakteer](https://trakteer.id/hirauki)
+[Trakteer](https://trakteer.id/harukaaaaa)
 <a/>
 
 ## ♾️ License
