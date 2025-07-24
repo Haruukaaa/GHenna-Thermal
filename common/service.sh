@@ -1,22 +1,21 @@
 #!/system/bin/sh
-wait_until_login() {
+wait_until_boot_complete() {
   while [[ "$(getprop sys.boot_completed)" != "1" ]]; do
   sh /data/adb/modules/gehenna-thermal/system/etc/.nth_fc/.fc_main.sh
     sleep 3
   done
-  test_file="/storage/emulated/0/Android/.PERMISSION_TEST"
-  true >"$test_file"
-  while [[ ! -f "$test_file" ]]; do
-    true >"$test_file"
-    sleep 1
-  done
-  rm -f "$test_file"
 }
 
-wait_until_login
+wait_until_boot_complete
 
-# Sleep some time to make sure init is completed
-sleep 40
+SC=/sys/class
+SM=/sys/module
+
+# ➜ PERMISSIONS
+chmod 777 $SC/power_supply/*/*
+chmod 777 $SM/qpnp_smbcharger/*/*
+chmod 777 $SM/dwc3_msm/*/*
+chmod 777 $SM/phy_msm_usb/*/*
 
 su -lp 2000 -c "cmd notification post -S bigtext -t 'Kakfa 🎻❌' 'Tag' '$(getprop ro.soc.model) said that I'm good at exploring performance, even though Im not fully understand what it means.'"
 
@@ -108,12 +107,30 @@ sleep 1
     for therm_serv in $thermal_prop; do
         stop $therm_serv
     done
-ext() {
-    if [ -f "\$2" ]; then
-        chmod 0666 "\$2"
-        echo "\$1" > "\$2"
-        chmod 0444 "\$2"
-    fi
+echo '1' > $SC/fast_charge/force_fast_charge
+echo '1' > $SC/power_supply/battery/system_temp_level
+echo '1' > /sys/kernel/fast_charge/failsafe
+echo '1' > $SC/power_supply/battery/allow_hvdcp3
+echo '1' > $SC/power_supply/usb/pd_allowed
+echo '1' > $SC/power_supply/battery/subsystem/usb/pd_allowed
+echo '0' > $SC/power_supply/battery/input_current_limited
+echo '1' > $SC/power_supply/battery/input_current_settled
+echo '0' > $SC/qcom-battery/restricted_charging
+echo '350' > $SC/power_supply/bms/temp_cool
+echo '600' > $SC/power_supply/bms/temp_hot
+echo '500' > $SC/power_supply/bms/temp_warm
+echo '5500000' > $SC/power_supply/usb/current_max
+echo '5500000' > $SC/power_supply/usb/hw_current_max
+echo '5500000' > $SC/power_supply/usb/pd_current_max
+echo '5500000' > $SC/power_supply/usb/ctm_current_max
+echo '5500000' > $SC/power_supply/usb/sdp_current_max
+echo '5500000' > $SC/power_supply/main/current_max
+echo '5500000' > $SC/power_supply/main/constant_charge_current_max
+echo '5500000' > $SC/power_supply/battery/current_max
+echo '5500000' > $SC/power_supply/battery/constant_charge_current_max
+echo '5500000' > $SC/qcom-battery/restricted_current
+echo '5500000' > $SC/power_supply/pc_port/current_max
+echo '5500000' > $SC/power_supply/constant_charge_current__max
 }
 if [ -e /sys/class/kgsl/kgsl-3d0/devfreq/governor ]; then
   echo "msm-adreno-tz" > /sys/class/kgsl/kgsl-3d0/devfreq/governor
