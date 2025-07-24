@@ -19,7 +19,6 @@ video.accelerate.hw=1
 debug.hwui.app_memory_policy=aggresive
 debug.hwui.optimized_texture_upload=true
 debug.hwui.use_gpu_pixel_buffers=1
-debug.hwui.disable_vsync=true
 
 # Reduce Texture
 ro.hwui.texture_cache_flushrate=0.4
@@ -31,9 +30,6 @@ ro.texture_atlas_map_pool_override=0.15
 debug.egl.disable_msaa=true
 debug.egl.disable_msaa=1
 camera.debug.logfile=0
-#disable cpu vysnc
-debug.cpurend.vsync=false
-hwui.disable_vsync=true
 
 # Memory properties
 ro.vendor.qti.sys.fw.bservice_enable=true
