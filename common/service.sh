@@ -8,7 +8,7 @@ wait_until_boot_complete() {
 
 wait_until_boot_complete
 
-su -lp 2000 -c "cmd notification post -S bigtext -t 'Kakfa 🎻❌' 'Tag' '$(getprop ro.soc.model) said that I'm good at exploring performance, even though Im not fully understand what it means.'"
+su -lp 2000 -c "cmd notification post -S bigtext -t 'Kafka 🎻❌' 'Tag' '$(getprop ro.soc.model) said that I good at exploring performance, even though Im not fully understand what it means.'"
 
 for svc in logd traced statsd; do
     if getprop init.svc.$svc | grep -q "running"; then
@@ -215,7 +215,7 @@ fstrim /cache
 fstrim /system
 fstrim /data
 
-su -lp 2000 -c "cmd notification post -S bigtext -t 'Kakfa 🎻✅' 'Tag' 'Oh, bye-bye, $(getprop ro.soc.model). See if you can surprise me next time.'"
+su -lp 2000 -c "cmd notification post -S bigtext -t 'Kafka 🎻✅' 'Tag' 'Oh, bye-bye, $(getprop ro.soc.model). See if you can surprise me next time.'"
     exit 0
     
     
