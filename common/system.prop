@@ -1,24 +1,6 @@
 #fps
 ro.vendor.dfps.enable=false
-
-# GPU Turbo Boost system properties
-debug.gpu.renderscript.load_store_texture=1
-debug.enabletr=true
-debug.gr.numframebuffers=5
-debug.egl.buffcount=5
-debug.hwui.level=0
-debug.overlayui.enable=1
-debug.performance.tuning=1
-hw3d.force=1
-persist.sys.ui.hw=1
-ro.config.enable.hw_accel=true
-ro.fb.mode=1
-video.accelerate.hw=1
-
-# HWUI
-debug.hwui.app_memory_policy=aggresive
-debug.hwui.optimized_texture_upload=true
-debug.hwui.use_gpu_pixel_buffers=1
+ro.vendor.smart_dfps.enable=false
 
 # Reduce Texture
 ro.hwui.texture_cache_flushrate=0.4
@@ -98,3 +80,4 @@ ro.config.hw_quickpoweron=true
 # Disable Unnecessary 
 ro.hwui.disable_scissor_opt=false
 ro.zygote.disable_gl_preload=true
+
