@@ -4,3 +4,4 @@
 - Initial Release with special based from Hirauki Thermal
 - Added task profiler.json for better management on task
 - Bring some tweaks from Wis'Adel build
+- No more support fast charging cause make your battery dead faster
