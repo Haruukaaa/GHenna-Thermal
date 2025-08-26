@@ -190,14 +190,6 @@ resetprop -n ro.hwui.text_small_cache_height 1024
 resetprop -n ro.hwui.text_large_cache_width 2048
 resetprop -n ro.hwui.text_large_cache_height 2048
 ####################################
-# LMK
-####################################
-resetprop -n ro.lmk.debug false
-resetprop -n ro.lmk.upgrade_pressure 40
-resetprop -n ro.lmk.downgrade_pressure 60
-resetprop -n ro.lmk.kill_heaviest_task false
-
-####################################
 # Tombstone (by @modulostk)
 ####################################
 # Max tombstone count [/data/tombstones]
