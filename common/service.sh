@@ -8,15 +8,6 @@ wait_until_boot_complete() {
 
 wait_until_boot_complete
 
-SC=/sys/class
-SM=/sys/module
-
-# ➜ PERMISSIONS
-chmod 777 $SC/power_supply/*/*
-chmod 777 $SM/qpnp_smbcharger/*/*
-chmod 777 $SM/dwc3_msm/*/*
-chmod 777 $SM/phy_msm_usb/*/*
-
 su -lp 2000 -c "cmd notification post -S bigtext -t 'Kakfa 🎻❌' 'Tag' '$(getprop ro.soc.model) said that I'm good at exploring performance, even though Im not fully understand what it means.'"
 
 for svc in logd traced statsd; do
@@ -67,10 +58,20 @@ for thermal in $(resetprop | awk -F '[][]' '/thermal/ {print $2}'); do
     sleep 10
     resetprop -n "$thermal" stopped
   fi
-   eval "$(seq 32 |
-   sed 's/^/service call sensor_privacy /g' |sed 's/
-   $/ 132 1/g)"
 done
+  for dir in /sys/class/thermal/thermal_zone*; do
+    if [[ -d "$dir" ]]; then
+      chmod a-r "$dir/temp"
+    fi
+  done
+  find /sys -name enabled | grep 'msm_thermal' | while IFS= read -r msm_thermal_status; do
+    if [ "$(cat "$msm_thermal_status")" = 'Y' ]; then
+      echo 'N' > "$msm_thermal_status"
+    fi
+    if [ "$(cat "$msm_thermal_status")" = '1' ]; then
+      echo '0' > "$msm_thermal_status"
+    fi
+  done
 sleep 1
 find /sys/ -type f -name "*throttling*" | while IFS= read -r throttling; do
     [ -w "$throttling" ] && echo 0 > "$throttling" 2>/dev/null
@@ -87,8 +88,6 @@ done
   if resetprop ro.thermal_warmreset | grep -q 'true'; then
     resetprop -n ro.thermal_warmreset false
   fi
-sleep 1    
-echo 0 > /sys/class/thermal/thermal_zone*/mode
 sleep 1
   if resetprop dalvik.vm.dexopt.thermal-cutoff | grep -q '2'; then
     resetprop -n dalvik.vm.dexopt.thermal-cutoff 0
@@ -107,30 +106,6 @@ sleep 1
     for therm_serv in $thermal_prop; do
         stop $therm_serv
     done
-echo '1' > $SC/fast_charge/force_fast_charge
-echo '1' > $SC/power_supply/battery/system_temp_level
-echo '1' > /sys/kernel/fast_charge/failsafe
-echo '1' > $SC/power_supply/battery/allow_hvdcp3
-echo '1' > $SC/power_supply/usb/pd_allowed
-echo '1' > $SC/power_supply/battery/subsystem/usb/pd_allowed
-echo '0' > $SC/power_supply/battery/input_current_limited
-echo '1' > $SC/power_supply/battery/input_current_settled
-echo '0' > $SC/qcom-battery/restricted_charging
-echo '350' > $SC/power_supply/bms/temp_cool
-echo '600' > $SC/power_supply/bms/temp_hot
-echo '500' > $SC/power_supply/bms/temp_warm
-echo '5500000' > $SC/power_supply/usb/current_max
-echo '5500000' > $SC/power_supply/usb/hw_current_max
-echo '5500000' > $SC/power_supply/usb/pd_current_max
-echo '5500000' > $SC/power_supply/usb/ctm_current_max
-echo '5500000' > $SC/power_supply/usb/sdp_current_max
-echo '5500000' > $SC/power_supply/main/current_max
-echo '5500000' > $SC/power_supply/main/constant_charge_current_max
-echo '5500000' > $SC/power_supply/battery/current_max
-echo '5500000' > $SC/power_supply/battery/constant_charge_current_max
-echo '5500000' > $SC/qcom-battery/restricted_current
-echo '5500000' > $SC/power_supply/pc_port/current_max
-echo '5500000' > $SC/power_supply/constant_charge_current__max
 }
 if [ -e /sys/class/kgsl/kgsl-3d0/devfreq/governor ]; then
   echo "msm-adreno-tz" > /sys/class/kgsl/kgsl-3d0/devfreq/governor
