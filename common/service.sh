@@ -1,7 +1,6 @@
 #!/system/bin/sh
 wait_until_boot_complete() {
   while [[ "$(getprop sys.boot_completed)" != "1" ]]; do
-  sh /data/adb/modules/gehenna-thermal/system/etc/.nth_fc/.fc_main.sh
     sleep 3
   done
 }
