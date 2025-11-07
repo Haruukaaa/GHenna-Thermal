@@ -61,26 +61,6 @@ for component in LLCC L3 DDR DDRQOS; do
         [ -e "$path" ] && chmod 644 "$path" && echo "$freq" > "$path" && chmod 444 "$path"
     done
 done
-
-cmd settings put global activity_starts_logging_enabled 0
-cmd settings put global ble_scan_always_enabled 0
-cmd settings put global hotword_detection_enabled 0
-cmd settings put global mobile_data_always_on 0
-cmd settings put global network_recommendations_enabled 0
-cmd settings put secure adaptive_sleep 0
-cmd settings put secure screensaver_activate_on_dock 0  
-cmd settings put secure screensaver_activate_on_sleep 0
-cmd settings put secure screensaver_enabled 0
-cmd settings put secure send_action_app_error 0
-cmd settings put system air_motion_engine 0
-cmd settings put system air_motion_wake_up 0
-cmd settings put system intelligent_sleep_mode 0
-cmd settings put system master_motion 0
-cmd settings put system motion_engine 0
-cmd settings put system nearby_scanning_enabled 0
-cmd settings put system nearby_scanning_permission_allowed 0
-cmd settings put system rakuten_denwa 0
-cmd settings put system send_security_reports 0
 su -c "pm disable com.google.android.gms/.chimera.GmsIntentOperationService"
 su -c "pm disable com.google.android.gms/com.google.android.gms.mdm.receivers.MdmDeviceAdminReceiver"
 
