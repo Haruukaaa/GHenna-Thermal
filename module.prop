@@ -1,8 +1,8 @@
 id=gehenna-thermal
 name=🍃 GHenna Thermal
-version=Codename | Kafka 1.0
+version=Codename | Tairitsu 1.0
 versionCode=1
 author=Haruka
-description=Hi, There... Well, you caught me.
+description=Lets melody will help you gain performance.
 Device=Universal
 updateJson=https://raw.githubusercontent.com/Hirauki/GHenna-Thermal/refs/heads/main/update.json
