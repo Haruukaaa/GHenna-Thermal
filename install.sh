@@ -12,7 +12,7 @@ fi
 print_modname() {
   ui_print "      Welcome to Ghenna Thermal  ʕ⁠·⁠ᴥ⁠·⁠ʔ     "
   sleep 1
-  ui_print "Codename           : Kafka               "
+  ui_print "Codename           : Tairitsu               "
   sleep 1
   ui_print "Created            : Haruka"
   sleep 1
