@@ -65,7 +65,7 @@ su -c "pm disable com.google.android.gms/.chimera.GmsIntentOperationService"
 su -c "pm disable com.google.android.gms/com.google.android.gms.mdm.receivers.MdmDeviceAdminReceiver"
 
 for thermal in $(resetprop | awk -F '[][]' '/thermal/ {print $2}'); do
-  if [[ $(resetprop "$thermal") == running ]] || [[ $(resetprop "$thermal") == stopped ]]; then
+  if [[ $(resetprop "$thermal") == running ]] || [[ $(resetprop "$thermal") == restarting ]]; then
     stop "${thermal/init.svc.}"
     sleep 10
     resetprop -n "$thermal" stopped
@@ -184,6 +184,8 @@ for touch in \
         chmod 644 "$touch" >/dev/null 2>&1
         echo "1" > "$touch" 2>/dev/null
         chmod 444 "$touch" >/dev/null 2>&1
+    change_task_affinity ".hardware.biometrics.fingerprint" "ff"
+    change_task_affinity ".hardware.camera.provider" "ff"    
     fi
 done
 
