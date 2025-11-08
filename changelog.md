@@ -4,4 +4,5 @@
 - Initial Release with special based from Hirauki Thermal
 - Added task profiler.json for better management on task
 - Bring some tweaks from Wis'Adel build
-- No more support fast charging cause make your battery dead faster
+- Added fast charge up to 5500mAh (Depend on your charger and device)
+- Added support thermal for Samsung Exynos version
