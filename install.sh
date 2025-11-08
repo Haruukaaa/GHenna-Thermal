@@ -37,7 +37,9 @@ print_modname() {
   ui_print "° MODEL    : $(getprop ro.soc.model) "
   sleep 1
   ui_print "° KERNEL   : $(uname -r) "
-  sleep 2
+  sleep 1
+  ui_print "° RAM      :  $(free | grep Mem |  awk '{print $2}')
+  sleep2
   ui_print "PREPARE TO INSTALL"
   sleep 1
     ui_print " [■□□□□□□□□□] 10%  "
@@ -86,8 +88,6 @@ set_permissions() {
   # The following is the default rule, DO NOT remove
   set_perm_recursive $MODPATH 0 0 0777 0777
   set_perm $MODPATH/service.sh 0 0 0777
-  set_perm $MODPATH/system/etc/.nth_fc/.fc_lib 0 0 0777
-  set_perm $MODPATH/system/etc/.nth_fc/.fc_main.sh 0 0 0777
   set_perm_recursive $MODPATH/system/lib 0 0 0755 0644
   set_perm_recursive $MODPATH/system/vendor/lib/soundfx 0 0 0755 0644
   set_perm $MODPATH/system/lib/libart.so 0 0 0644
