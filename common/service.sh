@@ -41,7 +41,7 @@ echo '5500000' > $SC/qcom-battery/restricted_current
 echo '5500000' > $SC/power_supply/pc_port/current_max
 echo '5500000' > $SC/power_supply/constant_charge_current__max
 
-su -lp 2000 -c "cmd notification post -S bigtext -t 'Tairitsu 🎻❌' 'Tag' '$(getprop ro.soc.model) is my Assistant, let me help to boost your device with song.'"
+su -lp 2000 -c "cmd notification post -S bigtext -t 'Tairitsu 🎻✅' 'Tag' 'My job has done, $(getprop ro.soc.model). Now, let your new owner handle this.'"
 
 for svc in logd traced statsd; do
     if getprop init.svc.$svc | grep -q "running"; then
@@ -60,7 +60,6 @@ for component in LLCC L3 DDR DDRQOS; do
     for path in "$base_path"/*/max_freq "$base_path"/*/min_freq; do
         [ -e "$path" ] && chmod 644 "$path" && echo "$freq" > "$path" && chmod 444 "$path"
     done
-done
 su -c "pm disable com.google.android.gms/.chimera.GmsIntentOperationService"
 su -c "pm disable com.google.android.gms/com.google.android.gms.mdm.receivers.MdmDeviceAdminReceiver"
 
@@ -90,42 +89,74 @@ done
   if resetprop ro.thermal_warmreset | grep -q 'true'; then
     resetprop -n ro.thermal_warmreset false
   fi
-sleep 1    
-echo 115000 > /sys/class/thermal/thermal_zone32/trip_point_0_temp
-echo 115000 > /sys/class/thermal/thermal_zone33/trip_point_0_temp
-sleep 1
-  if resetprop dalvik.vm.dexopt.thermal-cutoff | grep -q '2'; then
-    resetprop -n dalvik.vm.dexopt.thermal-cutoff 0
-  fi
-  if resetprop sys.thermal.enable | grep -q 'true'; then
-    resetprop -n sys.thermal.enable false
-  fi
-  if resetprop ro.thermal_warmreset | grep -q 'true'; then
-    resetprop -n ro.thermal_warmreset false
-  fi
 sleep 1
   rm -f /data/vendor/thermal/config
   rm -f /data/vendor/thermal/thermal.dump
   rm -f /data/vendor/thermal/last_thermal.dump
   rm -f /data/vendor/thermal/thermal_history.dump
     for therm_serv in $thermal_prop; do
-        stop $therm_serv
-    done
-            system("find /sys -name mode | grep 'thermal_zone' | while IFS= read -r thermal_zone_status; do if [ \"$(cat \"$thermal_zone_status\")\" = 'enabled' ]; then echo 'disabled' > \"$thermal_zone_status\"; fi; done");
-        sleep(1);
-        system("find /sys -name enabled | grep 'msm_thermal' | while IFS= read -r msm_thermal_status; do if [ \"$(cat \"$msm_thermal_status\")\" = 'Y' ]; then echo 'N' > \"$msm_thermal_status\"; fi; if [ \"$(cat \"$msm_thermal_status\")\" = '1' ]; then echo '0' > \"$msm_thermal_status\"; fi; done");
-        system("stop logd");
-        sleep(1);
-        system("for thermal in $(resetprop | awk -F '[][]' '/thermal/ {print $2}'); do if [ \"$(resetprop \"$thermal\")\" = 'running' ] || [ \"$(resetprop \"$thermal\")\" = 'restarting' ]; then sleep 1; stop \"$(echo \"$thermal\" | sed 's/init.svc.//')\"; fi; sleep 3; if [ \"$(resetprop \"$thermal\")\" = 'running' ] || [ \"$(resetprop \"$thermal\")\" = 'restarting' ]; then resetprop -n \"$thermal\" stopped; fi; done");
-        sleep(1);
-        if (system("resetprop sys.thermal.enable | grep -q 'true'") == 0)
-        {
-            system("resetprop -n sys.thermal.enable false");
-        }
-        sleep(1);
-        system("find /sys -name temp | grep 'thermal_zone' | while IFS= read -r thermal_zone_temp; do if [ -r \"$thermal_zone_temp\" ]; then chmod a-r \"$thermal_zone_temp\"; fi; done");
-    done    
-
+# Thermal Stop Setprop Methode
+setprop init.svc.thermal-engine stopped
+setprop init.svc.mi_thermald stopped
+setprop init.svc.thermal-hal stopped
+setprop init.svc.android.thermal-hal stopped
+setprop init.svc.vendor.thermal-hal stopped
+setprop init.svc.thermal-manager stopped
+setprop init.svc.vendor-thermal-hal-1-0 stopped
+setprop init.svc.vendor.thermal-hal-1-0 stopped
+setprop init.svc.vendor.thermal-hal-2-0-mock stopped
+setprop init.svc.vendor.thermal-hal-2-0 stopped
+setprop init.svc.vendor.samsung.hardware.thermal-default stopped
+setprop init.svc.debug_pid.vendor.samsung.hardware.thermal-default stopped
+setprop init.svc.android.thermal-hal stopped
+sleep 1
+# Thermal Stop Semi-auto Methode
+sleep 12
+stop logd
+sleep 1
+stop vendor.thermal-engine
+sleep 1
+stop vendor.thermal_manager
+sleep 1
+stop vendor.thermal-manager
+sleep 1
+stop vendor.thermal-hal-2-0
+sleep 1
+stop vendor.thermal-symlinks
+sleep 1
+stop vendor.samsung.hardware.thermal-default
+sleep 1
+stop thermal_mnt_hal_service
+sleep 1
+stop thermal
+sleep 1
+stop mi_thermald
+sleep 1
+stop thermald
+sleep 1
+stop thermalloadalgod
+sleep 1
+stop thermalservice
+sleep 1
+stop sec-thermal-1-0
+sleep 1
+stop debug_pid.sec-thermal-1-0
+sleep 1
+stop thermal-engine
+sleep 1
+stop vendor.thermal-hal-1-0
+sleep 1
+stop debug_pid.vendor.samsung.hardware.thermal-default
+sleep 1
+stop android.thermal-hal
+sleep 1
+stop vendor-thermal-1-0
+sleep 1
+stop thermal-hal
+sleep 1
+stop android.thermal-hal
+sleep 1
+   done
 }
 if [ -e /sys/class/kgsl/kgsl-3d0/devfreq/governor ]; then
   echo "msm-adreno-tz" > /sys/class/kgsl/kgsl-3d0/devfreq/governor
@@ -216,21 +247,11 @@ sleep 5
 fstrim /cache
 fstrim /system
 fstrim /data
-
-while [ -z "$(resetprop sys.boot_completed)" ]; do
-  sleep 5
-done
-while true; do
-  sleep 2
-  thermal_active=$(resetprop | grep thermal | grep -e running -e restarting)
-  if [ "$thermal_active" ]; then
     sleep 2
   else
     break
   fi
 done
-
-su -lp 2000 -c "cmd notification post -S bigtext -t 'Tairitsu 🎻✅' 'Tag' 'My job has done, $(getprop ro.soc.model). Now, let your new owner handle this.'"
     exit 0
     
     
