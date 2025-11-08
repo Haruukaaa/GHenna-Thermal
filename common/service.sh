@@ -69,9 +69,6 @@ for thermal in $(resetprop | awk -F '[][]' '/thermal/ {print $2}'); do
     sleep 10
     resetprop -n "$thermal" stopped
   fi
-   eval "$(seq 32 |
-   sed 's/^/service call sensor_privacy /g' |sed 's/
-   $/ 132 1/g)"
 done
 sleep 1
 find /sys/ -type f -name "*throttling*" | while IFS= read -r throttling; do
@@ -98,6 +95,7 @@ sleep 1
 # Thermal Stop Setprop Methode
 setprop init.svc.thermal-engine stopped
 setprop init.svc.mi_thermald stopped
+setprop init.svc.thermal_mnt_hal_service stopped
 setprop init.svc.thermal-hal stopped
 setprop init.svc.android.thermal-hal stopped
 setprop init.svc.vendor.thermal-hal stopped
@@ -157,7 +155,6 @@ sleep 1
 stop android.thermal-hal
 sleep 1
    done
-}
 if [ -e /sys/class/kgsl/kgsl-3d0/devfreq/governor ]; then
   echo "msm-adreno-tz" > /sys/class/kgsl/kgsl-3d0/devfreq/governor
   echo 0 > /sys/class/kgsl/kgsl-3d0/devfreq/adrenoboost
@@ -249,7 +246,6 @@ fstrim /system
 fstrim /data
     sleep 2
   else
-    break
   fi
 done
     exit 0
