@@ -5,4 +5,5 @@ versionCode=1
 author=Haruka
 description=Lets melody will help you gain performance.
 Device=Universal
+banner=banner.png
 updateJson=https://raw.githubusercontent.com/Hirauki/GHenna-Thermal/refs/heads/main/update.json
