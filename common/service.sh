@@ -64,7 +64,19 @@ reset_thermal_properties() {
         [ -e "$limit" ] && chmod 000 "$limit"
     done
 sleep 1
+remove_thermal_dump_files() {
+    rm -f /data/vendor/thermal/{config,thermal.dump,last_thermal.dump,thermal_history.dump}
+}
    done
+   disable_thermal_devices() {
+    for device in mali BIG LITTLE G3D; do
+        for dir in /sys/devices/platform/*."$device"; do
+            [ -e "$dir/all_temp" ] && chmod 000 "$dir/all_temp"
+            [ -e "$dir/hotplug_in_temp" ] && chmod 000 "$dir/hotplug_in_temp"
+            [ -e "$dir/hotplug_out_temp" ] && chmod 000 "$dir/hotplug_out_temp"
+        done
+    done
+}
 if [ -e /sys/class/kgsl/kgsl-3d0/devfreq/governor ]; then
   echo "msm-adreno-tz" > /sys/class/kgsl/kgsl-3d0/devfreq/governor
   echo 0 > /sys/class/kgsl/kgsl-3d0/devfreq/adrenoboost
