@@ -7,40 +7,6 @@ wait_until_boot_complete() {
 
 wait_until_boot_complete
 
-SC=/sys/class
-SM=/sys/module
-
-# ➜ PERMISSIONS
-chmod 777 $SC/power_supply/*/*
-chmod 777 $SM/qpnp_smbcharger/*/*
-chmod 777 $SM/dwc3_msm/*/*
-chmod 777 $SM/phy_msm_usb/*/*
-
-echo '1' > $SC/fast_charge/force_fast_charge
-echo '1' > $SC/power_supply/battery/system_temp_level
-echo '1' > /sys/kernel/fast_charge/failsafe
-echo '1' > $SC/power_supply/battery/allow_hvdcp3
-echo '1' > $SC/power_supply/usb/pd_allowed
-echo '1' > $SC/power_supply/battery/subsystem/usb/pd_allowed
-echo '0' > $SC/power_supply/battery/input_current_limited
-echo '1' > $SC/power_supply/battery/input_current_settled
-echo '0' > $SC/qcom-battery/restricted_charging
-echo '350' > $SC/power_supply/bms/temp_cool
-echo '600' > $SC/power_supply/bms/temp_hot
-echo '500' > $SC/power_supply/bms/temp_warm
-echo '5500000' > $SC/power_supply/usb/current_max
-echo '5500000' > $SC/power_supply/usb/hw_current_max
-echo '5500000' > $SC/power_supply/usb/pd_current_max
-echo '5500000' > $SC/power_supply/usb/ctm_current_max
-echo '5500000' > $SC/power_supply/usb/sdp_current_max
-echo '5500000' > $SC/power_supply/main/current_max
-echo '5500000' > $SC/power_supply/main/constant_charge_current_max
-echo '5500000' > $SC/power_supply/battery/current_max
-echo '5500000' > $SC/power_supply/battery/constant_charge_current_max
-echo '5500000' > $SC/qcom-battery/restricted_current
-echo '5500000' > $SC/power_supply/pc_port/current_max
-echo '5500000' > $SC/power_supply/constant_charge_current__max
-
 su -lp 2000 -c "cmd notification post -S bigtext -t 'Tairitsu 🎻✅' 'Tag' 'My job has done, $(getprop ro.soc.model). Now, let your new owner handle this.'"
 
 for svc in logd traced statsd; do
@@ -56,103 +22,47 @@ for component in LLCC L3 DDR DDRQOS; do
 
     freq=$(cat "$freq_file" | tr ' ' '\n' | sort -nr | head -n 1)
     [ -z "$freq" ] && continue
-
-    for path in "$base_path"/*/max_freq "$base_path"/*/min_freq; do
-        [ -e "$path" ] && chmod 644 "$path" && echo "$freq" > "$path" && chmod 444 "$path"
     done
 su -c "pm disable com.google.android.gms/.chimera.GmsIntentOperationService"
 su -c "pm disable com.google.android.gms/com.google.android.gms.mdm.receivers.MdmDeviceAdminReceiver"
 
-for thermal in $(resetprop | awk -F '[][]' '/thermal/ {print $2}'); do
-  if [[ $(resetprop "$thermal") == running ]] || [[ $(resetprop "$thermal") == restarting ]]; then
-    stop "${thermal/init.svc.}"
-    sleep 10
-    resetprop -n "$thermal" stopped
-  fi
-done
+disable_thermal_properties() {
+    for thermal in $(resetprop | awk -F '[][]' '/thermal/ {print $2}'); do
+        if [[ $(resetprop "$thermal") == running ]] || [[ $(resetprop "$thermal") == restarting ]]; then
+            stop "${thermal/init.svc.}"
+            sleep 10
+            resetprop -n "$thermal" stopped
+        fi
+    done
+}
 sleep 1
-find /sys/ -type f -name "*throttling*" | while IFS= read -r throttling; do
-    [ -w "$throttling" ] && echo 0 > "$throttling" 2>/dev/null
-done
-getprop | awk -F '[][]' '/ro.*thermal/ {print $2}' | while read -r prop; do
-    resetprop -n "$prop" 0
-done
-  if resetprop dalvik.vm.dexopt.thermal-cutoff | grep -q '2'; then
+disable_thermal_services() {
+    for rc in $(find /system/etc/init /vendor/etc/init /odm/etc/init -type f); do
+        grep -r "^service" "$rc" | awk '/thermal/ {print $2}'
+    done | while read -r svc; do
+        echo "Stopping $svc"
+        start "$svc"
+        stop "$svc"
+    done
+}
+freeze_thermal_processes() {
+    for pid in $(pgrep thermal); do
+        echo "Freeze $pid"
+        kill -SIGSTOP "$pid"
+    done
+}
+sleep 1
+reset_thermal_properties() {
     resetprop -n dalvik.vm.dexopt.thermal-cutoff 0
-  fi
-  if resetprop sys.thermal.enable | grep -q 'true'; then
     resetprop -n sys.thermal.enable false
-  fi
-  if resetprop ro.thermal_warmreset | grep -q 'true'; then
     resetprop -n ro.thermal_warmreset false
-  fi
-sleep 1
-  rm -f /data/vendor/thermal/config
-  rm -f /data/vendor/thermal/thermal.dump
-  rm -f /data/vendor/thermal/last_thermal.dump
-  rm -f /data/vendor/thermal/thermal_history.dump
+    resetprop -n vendor.thermal.bt_completed 0
+}
     for therm_serv in $thermal_prop; do
-# Thermal Stop Setprop Methode
-setprop init.svc.thermal-engine stopped
-setprop init.svc.mi_thermald stopped
-setprop init.svc.thermal_mnt_hal_service stopped
-setprop init.svc.thermal-hal stopped
-setprop init.svc.android.thermal-hal stopped
-setprop init.svc.vendor.thermal-hal stopped
-setprop init.svc.thermal-manager stopped
-setprop init.svc.vendor-thermal-hal-1-0 stopped
-setprop init.svc.vendor.thermal-hal-1-0 stopped
-setprop init.svc.vendor.thermal-hal-2-0-mock stopped
-setprop init.svc.vendor.thermal-hal-2-0 stopped
-setprop init.svc.vendor.samsung.hardware.thermal-default stopped
-setprop init.svc.debug_pid.vendor.samsung.hardware.thermal-default stopped
-setprop init.svc.android.thermal-hal stopped
-sleep 1
-# Thermal Stop Semi-auto Methode
-sleep 12
-stop logd
-sleep 1
-stop vendor.thermal-engine
-sleep 1
-stop vendor.thermal_manager
-sleep 1
-stop vendor.thermal-manager
-sleep 1
-stop vendor.thermal-hal-2-0
-sleep 1
-stop vendor.thermal-symlinks
-sleep 1
-stop vendor.samsung.hardware.thermal-default
-sleep 1
-stop thermal_mnt_hal_service
-sleep 1
-stop thermal
-sleep 1
-stop mi_thermald
-sleep 1
-stop thermald
-sleep 1
-stop thermalloadalgod
-sleep 1
-stop thermalservice
-sleep 1
-stop sec-thermal-1-0
-sleep 1
-stop debug_pid.sec-thermal-1-0
-sleep 1
-stop thermal-engine
-sleep 1
-stop vendor.thermal-hal-1-0
-sleep 1
-stop debug_pid.vendor.samsung.hardware.thermal-default
-sleep 1
-stop android.thermal-hal
-sleep 1
-stop vendor-thermal-1-0
-sleep 1
-stop thermal-hal
-sleep 1
-stop android.thermal-hal
+    disable_cpu_freq_limits() {
+    for limit in /sys/power/cpufreq_min_limit /sys/power/cpufreq_max_limit; do
+        [ -e "$limit" ] && chmod 000 "$limit"
+    done
 sleep 1
    done
 if [ -e /sys/class/kgsl/kgsl-3d0/devfreq/governor ]; then
@@ -161,8 +71,6 @@ if [ -e /sys/class/kgsl/kgsl-3d0/devfreq/governor ]; then
 echo 0 > /sys/module/msm_performance/parameters/touchboost
 fi
 done
-sleep 10
-
 rm -f /storage/emulated/0/*.log;
 settings delete global device_idle_constants
 settings delete global device_idle_constants_user
