@@ -10,9 +10,9 @@ print_modname() {
   sleep 1
   ui_print "Codename           : Tairitsu               "
   sleep 1
-  ui_print "Created            : Haruka"
+  ui_print "Created            : Hirauki"
   sleep 1
-  ui_print "Publisher          : Haruka"
+  ui_print "Publisher          : Hirauki"
   sleep 1
   ui_print "Update             : https://t.me/hgane_rei"
   sleep 1
@@ -33,8 +33,6 @@ print_modname() {
   ui_print "° MODEL    : $(getprop ro.soc.model) "
   sleep 1
   ui_print "° KERNEL   : $(uname -r) "
-  sleep 1
-  ui_print "° RAM      :  $(free | grep Mem |  awk '{print $2}')
   sleep2
   ui_print "PREPARE TO INSTALL"
   sleep 1
@@ -66,10 +64,41 @@ print_modname() {
 }
 
 on_install() {
+  # The following is the default implementation: extract $ZIPFILE/system to $MODPATH
+  # Extend/change the logic to whatever you want
+  ui_print "- Extracting module files"
   unzip -o "$ZIPFILE" -x 'META-INF/*' -d "$MODPATH" >&2
+  unzip -o "$ZIPFILE" 'system/*' -d $MODPATH >&2
+  unzip -o "$ZIPFILE" 'service.sh' -d $MODPATH >&2
+  unzip -o "$ZIPFILE" 'module.prop' -d $MODPATH >&2
+  sleep 2
 }
+
+# Only some special files require specific permissions
+# This function will be called after on_install is done
+# The default permissions should be good enough for most cases
 
 set_permissions() {
-  set_perm_recursive "$MODPATH" 0 0 0755 0644
+  # The following is the default rule, DO NOT remove
+  set_perm_recursive $MODPATH 0 0 0777 0777
+  set_perm $MODPATH/service.sh 0 0 0777
+  
+    # Here are some examples:
+  # set_perm_recursive  $MODPATH/system/lib       0     0       0755      0644
+  # set_perm  $MODPATH/system/bin/app_process32   0     2000    0755      u:object_r:zygote_exec:s0
+  # set_perm  $MODPATH/system/bin/dex2oat         0     2000    0755      u:object_r:dex2oat_exec:s0
+  # set_perm  $MODPATH/system/lib/libart.so       0     0       0644
 }
 
+# You can add more functions to assist your custom script code
+REPLACE="
+/system/vendor/etc/thermal-engine-map.conf
+/system/vendor/etc/thermal-engine.conf
+/system/vendor/etc/thermal-engine-normal.conf
+/system/vendor/etc/thermal-engine-sgame.conf
+/system/vendor/etc/thermal-engine-pubgmhd.conf
+/system/vendor/etc/perf/commonresourceconfigs.xml
+/system/vendor/etc/perf/perfboostsconfig.xml
+/system/vendor/etc/perf/targetconfig.xml
+/system/vendor/etc/perf/targetresourceconfigs.xml
+"
