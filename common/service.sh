@@ -45,12 +45,6 @@ disable_thermal_services() {
         stop "$svc"
     done
 }
-freeze_thermal_processes() {
-    for pid in $(pgrep thermal); do
-        echo "Freeze $pid"
-        kill -SIGSTOP "$pid"
-    done
-}
 sleep 1
 reset_thermal_properties() {
     resetprop -n dalvik.vm.dexopt.thermal-cutoff 0
