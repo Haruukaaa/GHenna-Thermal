@@ -15,7 +15,7 @@ But for global like paypal, ko-fi, you can support me too. And for Asian, you ca
 
 <img align="middle" width="50" src="https://github.com/user-attachments/assets/bcb9c1f8-b79f-4e50-8603-f205df6bd9c7">[Trakteer](https://trakteer.id/harukaaaaa)
 <img align="middle" width="50" src="https://github.com/user-attachments/assets/02b15456-d726-4b09-9d77-58754e4244fe">[Paypal](paypal.me/hiraukiiii)
-<img align="middle" width="50" src="https://github.com/user-attachments/assets/b6d58837-3090-4578-9be8-860e550fd0b3"[Ko-fi](Ko-fi.com/hirauki)
+<img align="middle" width="50" src="https://github.com/user-attachments/assets/b6d58837-3090-4578-9be8-860e550fd0b3">[Ko-fi](Ko-fi.com/hirauki)
 <a/>
 
 ## ♾️ License
