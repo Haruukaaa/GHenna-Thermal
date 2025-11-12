@@ -7,3 +7,4 @@
 - Added support thermal for Samsung Exynos version
 - Adapt too from Oneplus? Nah, maybe you can try by itself
 - Add sussy banner on KSU-Next User
+- Adding Google tweak for make your RAM freely huge space
