@@ -14,6 +14,7 @@ But for global like paypal, ko-fi, i can't make it because i don't have card.
 <img align="left" width="100" src="https://github.com/user-attachments/assets/7b903660-2e5c-42e7-b3f5-5f98faaca650">
 
 [Trakteer](https://trakteer.id/harukaaaaa)
+[Paypal](paypal.me/hiraukiiii)
 <a/>
 
 ## ♾️ License
