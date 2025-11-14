@@ -26,16 +26,6 @@ for component in LLCC L3 DDR DDRQOS; do
 su -c "pm disable com.google.android.gms/.chimera.GmsIntentOperationService"
 su -c "pm disable com.google.android.gms/com.google.android.gms.mdm.receivers.MdmDeviceAdminReceiver"
 
-disable_thermal_properties() {
-    for thermal in $(resetprop | awk -F '[][]' '/thermal/ {print $2}'); do
-        if [[ $(resetprop "$thermal") == running ]] || [[ $(resetprop "$thermal") == restarting ]]; then
-            stop "${thermal/init.svc.}"
-            sleep 10
-            resetprop -n "$thermal" stopped
-        fi
-    done
-}
-sleep 1
 disable_thermal_services() {
     for rc in $(find /system/etc/init /vendor/etc/init /odm/etc/init -type f); do
         grep -r "^service" "$rc" | awk '/thermal/ {print $2}'
@@ -45,7 +35,15 @@ disable_thermal_services() {
         stop "$svc"
     done
 }
-sleep 1
+disable_thermal_properties() {
+    for thermal in $(resetprop | awk -F '[][]' '/thermal/ {print $2}'); do
+        if [[ $(resetprop "$thermal") == running ]] || [[ $(resetprop "$thermal") == restarting ]]; then
+            stop "${thermal/init.svc.}"
+            sleep 10
+            resetprop -n "$thermal" stopped
+        fi
+    done
+}
 reset_thermal_properties() {
     resetprop -n dalvik.vm.dexopt.thermal-cutoff 0
     resetprop -n sys.thermal.enable false
@@ -57,7 +55,6 @@ reset_thermal_properties() {
     for limit in /sys/power/cpufreq_min_limit /sys/power/cpufreq_max_limit; do
         [ -e "$limit" ] && chmod 000 "$limit"
     done
-sleep 1
 remove_thermal_dump_files() {
     rm -f /data/vendor/thermal/{config,thermal.dump,last_thermal.dump,thermal_history.dump}
 }
@@ -77,6 +74,8 @@ if [ -e /sys/class/kgsl/kgsl-3d0/devfreq/governor ]; then
 echo 0 > /sys/module/msm_performance/parameters/touchboost
 fi
 done
+
+sleep 1
 rm -f /storage/emulated/0/*.log;
 settings delete global device_idle_constants
 settings delete global device_idle_constants_user
