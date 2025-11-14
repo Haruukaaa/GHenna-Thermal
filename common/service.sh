@@ -9,6 +9,15 @@ wait_until_boot_complete
 
 su -lp 2000 -c "cmd notification post -S bigtext -t 'Tairitsu 🎻✅' 'Tag' 'My job has done, $(getprop ro.soc.model). Now, let your new owner handle this.'"
 
+SC=/sys/class
+SM=/sys/module
+
+# Change Permission
+chmod 777 $SC/power_supply/*/*
+chmod 777 $SM/qpnp_smbcharger/*/*
+chmod 777 $SM/dwc3_msm/*/*
+chmod 777 $SM/phy_msm_usb/*/*
+
 for svc in logd traced statsd; do
     if getprop init.svc.$svc | grep -q "running"; then
         su -c "stop $svc"
