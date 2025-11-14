@@ -18,20 +18,6 @@ chmod 777 $SM/qpnp_smbcharger/*/*
 chmod 777 $SM/dwc3_msm/*/*
 chmod 777 $SM/phy_msm_usb/*/*
 
-for svc in logd traced statsd; do
-    if getprop init.svc.$svc | grep -q "running"; then
-        su -c "stop $svc"
-    fi
-done
-for component in LLCC L3 DDR DDRQOS; do
-    base_path="/sys/devices/system/cpu/bus_dcvs/$component"
-    [ ! -d "$base_path" ] && continue
-    freq_file="$base_path/available_frequencies"
-    [ ! -f "$freq_file" ] && continue
-
-    freq=$(cat "$freq_file" | tr ' ' '\n' | sort -nr | head -n 1)
-    [ -z "$freq" ] && continue
-    done
 su -c "pm disable com.google.android.gms/.chimera.GmsIntentOperationService"
 su -c "pm disable com.google.android.gms/com.google.android.gms.mdm.receivers.MdmDeviceAdminReceiver"
 
