@@ -9,15 +9,6 @@ wait_until_boot_complete
 
 su -lp 2000 -c "cmd notification post -S bigtext -t 'Tairitsu 🎻✅' 'Tag' 'My job has done, $(getprop ro.soc.model). Now, let your new owner handle this.'"
 
-SC=/sys/class
-SM=/sys/module
-
-# Change Permission
-chmod 777 $SC/power_supply/*/*
-chmod 777 $SM/qpnp_smbcharger/*/*
-chmod 777 $SM/dwc3_msm/*/*
-chmod 777 $SM/phy_msm_usb/*/*
-
 su -c "pm disable com.google.android.gms/.chimera.GmsIntentOperationService"
 su -c "pm disable com.google.android.gms/com.google.android.gms.mdm.receivers.MdmDeviceAdminReceiver"
 
@@ -39,6 +30,14 @@ disable_thermal_properties() {
         fi
     done
 }
+
+freeze_thermal_processes() {
+    for pid in $(pgrep thermal); do
+        echo "Freeze $pid"
+        kill -SIGSTOP "$pid"
+    done
+}
+
 reset_thermal_properties() {
     resetprop -n dalvik.vm.dexopt.thermal-cutoff 0
     resetprop -n sys.thermal.enable false
@@ -63,12 +62,22 @@ remove_thermal_dump_files() {
         done
     done
 }
-if [ -e /sys/class/kgsl/kgsl-3d0/devfreq/governor ]; then
-  echo "msm-adreno-tz" > /sys/class/kgsl/kgsl-3d0/devfreq/governor
-  echo 0 > /sys/class/kgsl/kgsl-3d0/devfreq/adrenoboost
+
+disable_cpu_freq_limits() {
+    for limit in /sys/power/cpufreq_min_limit /sys/power/cpufreq_max_limit; do
+        [ -e "$limit" ] && chmod 000 "$limit"
+    done
+}
+
+set_gpu_settings() {
+    echo "0" > /sys/class/kgsl/kgsl-3d0/bus_split
+    echo "0" > /sys/class/kgsl/kgsl-3d0/throttling
+    echo "1" > /sys/class/kgsl/kgsl-3d0/force_clk_on
+    echo "1" > /sys/class/kgsl/kgsl-3d0/force_rail_on
+    echo "1" > /sys/class/kgsl/kgsl-3d0/force_bus_on
+    echo "1" > /sys/class/kgsl/kgsl-3d0/force_no_nap
 echo 0 > /sys/module/msm_performance/parameters/touchboost
-fi
-done
+}
 
 sleep 1
 rm -f /storage/emulated/0/*.log;
