@@ -137,9 +137,6 @@ done
 for queue in /sys/block/*/queue; do
     echo "0" > "$queue/iostats"
 done
-chmod 755 /sys/module/qti_haptics/parameters/vmax_mv_override
-echo 500 > /sys/module/qti_haptics/parameters/vmax_mv_override
-chmod 444 /sys/module/qti_haptics/parameters/vmax_mv_override
 change_task_cgroup "system_server" "top-app" "cpuset"
 change_task_cgroup "system_server" "foreground" "stune"
 change_task_nice "kswapd" "-2"
@@ -162,8 +159,6 @@ fstrim /cache
 fstrim /system
 fstrim /data
     sleep 2
-  else
-  fi
 done
     exit 0
     
