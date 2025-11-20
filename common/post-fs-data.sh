@@ -2,30 +2,6 @@
 MODDIR ${0%/*}
 setprop ro.vendor.qti.config.zram true
 # This script will be executed in post-fs-data mode
-if
-write() {
-  if [ -f "$1" ]; then
-    if [ ! -w "$1" ]; then
-      chmod +w "$1"
-    fi
-    echo "$2" > "$1"
-  fi
-  directory=/data/adb/modules/gehenna-thermal/
-if [[ ! -d /data/adb/modules/gehenna-thermal/system ]]; then
-  find /system/ -name "*thermal*" | while read -r thermal; do
-    if [[ $(echo "$thermal" | grep "\.conf") ]]; then
-      mkdir -p "${directory}/${thermal}"
-      rmdir "${directory}/${thermal}"
-      touch "${directory}/${thermal}"
-    fi
-  done
-  find /vendor/ -name "*thermal*" | while read -r thermal; do
-    if [[ $(echo "$thermal" | grep "\.conf") ]]; then
-      mkdir -p "${directory}/system/${thermal}"
-      rmdir "${directory}/system/${thermal}"
-      touch "${directory}/system/${thermal}"
-    fi
-}
     # disable I/O debugging
 echo "0" > /sys/block/sda/queue/iostats
 echo "0" > /sys/block/loop1/queue/iostats
