@@ -2,7 +2,7 @@
 
 SKIPMOUNT=false
 PROPFILE=true
-POSTFSDATA=false
+POSTFSDATA=true
 LATESTARTSERVICE=true
 
 print_modname() {
@@ -82,6 +82,8 @@ set_permissions() {
   # The following is the default rule, DO NOT remove
   set_perm_recursive $MODPATH 0 0 0777 0777
   set_perm $MODPATH/service.sh 0 0 0777
+  set_perm $MODPATH/system/bin/P0 0 0 0755 0755
+  set_perm $MODPATH/system/bin/P1 0 0 0755 0755
   
     # Here are some examples:
   # set_perm_recursive  $MODPATH/system/lib       0     0       0755      0644
