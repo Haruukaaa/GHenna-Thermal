@@ -1,13 +1,13 @@
 <!--
 -->
-# GHenna-Tweaks
+## GHenna-Tweaks
 Want better?
 <img width="2569" height="1446" alt="448285442-c5446b58-bf26-4f89-90be-7828d1db7280" src="https://github.com/user-attachments/assets/702b75ee-971a-46ee-8819-628aa2a82994" />
 
 
 <!--
 -->
-## **📫 Contacts**
+## 📫 Contacts
 <a>**Please Contact me on Telegram for a any report about this project** [Hirauki Disscussion](https://t.me/hiraukidiscussion)
 <img align="left" width="100" src="https://github.com/user-attachments/assets/d34d2262-b22f-4ffd-8a3f-42ffcc2c1dcf">
 If you didn't get response by me, Tag me once per time, and i'll response it.
@@ -15,7 +15,7 @@ If you didn't get response by me, Tag me once per time, and i'll response it.
 
 <!--
 -->
-# 💳 Open Donate
+## 💳 Open Donate
 I really thankfull if you help me support this project.
 But for global like paypal, ko-fi, you can support me too. And for Asian, you can use Trakteer.
 <img align="left" width="100" src="https://github.com/user-attachments/assets/7b903660-2e5c-42e7-b3f5-5f98faaca650">
