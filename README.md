@@ -1,15 +1,21 @@
-# GHenna-Thermal
+<!--
+-->
+# GHenna-Tweaks
 Want better?
 ![GHenna Project](https://github.com/user-attachments/assets/c5446b58-bf26-4f89-90be-7828d1db7280)
 
+<!--
+-->
 ## **📫 Contacts**
 <a>**Please Contact me on Telegram for a any report about this project** [Hirauki Disscussion](https://t.me/hiraukidiscussion)
 <img align="left" width="100" src="https://github.com/user-attachments/assets/d34d2262-b22f-4ffd-8a3f-42ffcc2c1dcf">
 If you didn't get response by me, Tag me once per time, and i'll response it.
 </a>
 
+<!--
+-->
 # 💳 Open Donate
-<a> I really thankfull if you help me support this project.
+I really thankfull if you help me support this project.
 But for global like paypal, ko-fi, you can support me too. And for Asian, you can use Trakteer.
 <img align="left" width="100" src="https://github.com/user-attachments/assets/7b903660-2e5c-42e7-b3f5-5f98faaca650">
 
@@ -18,6 +24,8 @@ But for global like paypal, ko-fi, you can support me too. And for Asian, you ca
 <img align="middle" width="50" src="https://github.com/user-attachments/assets/b6d58837-3090-4578-9be8-860e550fd0b3">[Ko-fi](Ko-fi.com/hirauki)
 <a/>
 
+<!--
+-->
 ## ♾️ License
 This project is `licensed` under the `Apache License 2.0`. 
 ```text
