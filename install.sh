@@ -6,7 +6,7 @@ POSTFSDATA=true
 LATESTARTSERVICE=true
 
 print_modname() {
-  ui_print "      Welcome to Ghenna Thermal  ʕ⁠·⁠ᴥ⁠·⁠ʔ     "
+  ui_print "      Welcome to Ghenna Tweaks  ʕ⁠·⁠ᴥ⁠·⁠ʔ     "
   sleep 1
   ui_print "Codename           : Tairitsu               "
   sleep 1
