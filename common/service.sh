@@ -1,8 +1,6 @@
 
 #!/system/bin/sh
 MODDIR=${0%/*}
-
-#!/system/bin/sh
 wait_until_boot_complete() {
   while [[ "$(getprop sys.boot_completed)" != "1" ]]; do
     sleep 1
@@ -15,8 +13,6 @@ wait_until_boot_complete() {
   done
   rm -f "$test_file"
 }
-
-wait_until_boot_complete
 
 disable_gpu_limits() {
     if [ -f "/proc/gpufreq/gpufreq_power_limited" ]; then
