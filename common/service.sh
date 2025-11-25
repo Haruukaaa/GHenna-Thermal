@@ -7,84 +7,16 @@ wait_until_boot_complete() {
   while [[ "$(getprop sys.boot_completed)" != "1" ]]; do
     sleep 1
   done
+ test_file="/storage/emulated/0/Android/.PERMISSION_TEST"
+  true >"$test_file"
+  while [[ ! -f "$test_file" ]]; do
+    true >"$test_file"
+    sleep 1
+  done
+  rm -f "$test_file"
 }
 
 wait_until_boot_complete
-
-kill_thermal_process() {
-    local pid=$1
-    local name=$2
-    if [ -n "$pid" ]; then
-        kill -SIGSTOP "$pid" 2>/dev/null
-        sleep 0.5
-        if ps -p "$pid" > /dev/null; then
-            kill -9 "$pid" 2>/dev/null
-            log_activity "Force-killed $name (PID $pid) with SIGKILL"
-        fi
-        # Final fallback: pkill -9 if PID still exists
-        if ps -p "$pid" > /dev/null; then
-            pkill -9 -f "$name" 2>/dev/null
-            log_activity "Nuclear pkill -9 executed on $name"
-        fi
-    fi
-}
-
-disable_thermal_zones() {
-    for zone in /sys/class/thermal/thermal_zone*/mode; do
-        if [ -f "$zone" ] && [ "$(cat "$zone")" != "disabled" ]; then
-            chmod 644 "$zone"
-            echo "disabled" > "$zone"
-        fi
-    done
-    
-    for zone2 in /sys/class/thermal/thermal_zone*/policy; do
-        if [ -f "$zone2" ] && [ "$(cat "$zone2")" != "userspace" ]; then
-            echo "userspace" > "$zone2"
-        fi
-    done
-    log_activity "Disabled Thermal Zones"
-}
-
-stop_thermal_services() {
-    thermal_services() {
-        find /system/etc/init /vendor/etc/init /odm/etc/init -type f 2>/dev/null | 
-        xargs grep -l '^service.*thermal' 2>/dev/null | 
-        xargs grep -h '^service' | awk '{print $2}'
-    }
-    
-    for svc in $(thermal_services); do
-        if getprop | grep -q "init.svc.$svc.*running"; then
-            stop "$svc"
-            sleep 0.5
-            pid=$(pidof "$svc")
-            [ -n "$pid" ] && kill_thermal_process "$pid" "$svc"
-        fi
-    done
-        for dead in android.hardware.thermal-service.mediatek android.hardware.thermal@2.0-service.mtk; do
-        if getprop | grep -q "init.svc.$dead.*running"; then
-            stop "$dead"
-            pid=$(pidof "$dead")
-            [ -n "$pid" ] && kill -SIGSTOP "$pid"
-        fi
-    done
-        for pid in $(pgrep thermal); do
-        kill -SIGSTOP "$pid"
-    done
-        thermal() {
-    find /system/etc/init /vendor/etc/init /odm/etc/init -type f 2>/dev/null | xargs grep -h "^service" | awk '{print $2}' | grep thermal
-    }
-
-    thermal_service=$(thermal)
-
-    if [ "$thermal_service" != "vendor.thermal-hal" ] && [ "$thermal_service" != "android.hardware.thermal-service.mediatek" ]; then
-      stop "$thermal_service"
-      sleep 0.5
-       pid=$(pidof "$thermal_service")
-         if [ -n "$pid" ]; then
-        kill -9 "$pid"
-      fi
-    fi
-}
 
 disable_gpu_limits() {
     if [ -f "/proc/gpufreq/gpufreq_power_limited" ]; then
@@ -110,74 +42,6 @@ set_cpu_limits() {
                 fi
             fi
         done
-    fi
-}
-
-reset_thermal_properties() {
-    for prop in $(getprop | awk -F '[][]' '/init\.svc_/ {print $2}'); do
-        if [ -n "$prop" ]; then
-            resetprop -n "$prop" ""
-        fi
-    done
-    
-    getprop | awk -F '[][]' '/ro.*thermal/ {print $2}' | while read -r prop; do
-        if [ "$(getprop "$prop")" != "0" ]; then
-            resetprop -n "$prop" 0
-        fi
-    done
-
-    for prop in $(getprop | grep thermal | cut -f1 -d] | cut -f2 -d[ | grep -F init.svc.); do
-        if [ "$(getprop "$prop")" != "stopped" ]; then
-            setprop "$prop" stopped
-        fi
-    done
-    
-    for prop in $(getprop | grep thermal | cut -f1 -d] | cut -f2 -d[ | grep -F init.svc_); do
-        setprop "$prop" ""
-    done
-
-    log_activity "Reset Thermal Properties"
-    done
-
-    for pid in $(pgrep -f thermal); do
-        kill_thermal_process "$pid" "thermal"
-    done
-        for dead in android.hardware.thermal-service.mediatek android.hardware.thermal@2.0-service.mtk; do
-        pid=$(pidof "$dead")
-        [ -n "$pid" ] && kill_thermal_process "$pid" "$dead"
-    done
-    [ -f /sys/class/kgsl/kgsl-3d0/throttling ] && echo "0" > /sys/class/kgsl/kgsl-3d0/throttling
-    [ -f /sys/class/kgsl/kgsl-3d0/force_clk_on ] && echo "1" > /sys/class/kgsl/kgsl-3d0/force_clk_on
-    [ -f /sys/class/kgsl-3d0/bus_split ] && echo "0" > /sys/class/kgsl-3d0/bus_split
-    [ -f /sys/class/kgsl/kgsl-3d0/force_bus_on ] && echo "1" > /sys/class/kgsl/kgsl-3d0/force_bus_on
-    [ -f /sys/class/kgsl/kgsl-3d0/force_no_nap ] && echo "1" > /sys/class/kgsl/kgsl-3d0/force_no_nap
-    [ -f /sys/module/msm_performance/parameters/touchboost ] && echo "0" > /sys/module/msm_performance/parameters/touchboost
-}
-
-disable_ppm_policies() {
-    if [ -d /proc/ppm ] && [ -f /proc/ppm/policy_status ]; then
-        for idx in $(grep -E 'FORCE_LIMIT|PWR_THRO|THERMAL' /proc/ppm/policy_status | awk -F'[][]' '{print $2}'); do
-            current_status=$(grep "^$idx " /proc/ppm/policy_status | awk '{print $2}')
-            if [ "$current_status" != "0" ]; then
-                echo "$idx 0" > /proc/ppm/policy_status
-            fi
-        done
-    fi
-}
-
-hide_thermal_monitoring() {
-    find /sys/devices/virtual/thermal -type f -exec sh -c '
-        for file; do
-            if [ "$(stat -c "%a" "$file")" != "0" ]; then
-                chmod 000 "$file"
-            fi
-        done
-    ' sh {} +
-}
-
-disable_thermal_stats() {
-    if [ "$(cmd thermalservice get-status)" != "0" ]; then
-        cmd thermalservice override-status 0
     fi
 }
 
