@@ -84,7 +84,7 @@ debug.hwui.skia_atrace_enabled=false
 renderthread.skia.reduceopstasksplitting=true
 
 #Improve sliding response
-windowsmgr.max_events_per_sec=90
+windowsmgr.max_events_per_sec=120
 view.scroll_friction=0
 ro.min_pointer_dur=8
 touch.deviceType=touchScreen
