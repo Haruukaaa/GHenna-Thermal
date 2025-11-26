@@ -1,42 +1,21 @@
 #!/sbin/sh
-
-#################
-# Initialization
-#################
-
 umask 022
-
-# echo before loading util_functions
 ui_print() { echo "$1"; }
-
 require_new_magisk() {
   ui_print "________________________________________________________"
-  ui_print " Please Update your Magisk if using low version! "
+  ui_print " Builded by Hirauki (@hgane_rei) "
   ui_print "________________________________________________________"
   exit 1
 }
-
-#########################
-# Load util_functions.sh
-#########################
-
 OUTFD=$2
 ZIPFILE=$3
-
 mount /data 2>/dev/null
-
-[ -f /data/adb/magisk/util_functions.sh ] || require_new_magisk
+if ! [ -f /data/adb/magisk/util_functions.sh ]; then
+  require_new_magisk
+fi
 . /data/adb/magisk/util_functions.sh
-[ $MAGISK_VER_CODE -lt 25200 ] && require_new_magisk
-
-print_modname
-
-ui_print "________________________________________________________"
-ui_print "Builded by Hirauki (@hgane_rei)"
-ui_print "________________________________________________________"
-##########################################################################################
-# Finalizing
-##########################################################################################
+if [ $MAGISK_VER_CODE -lt 20400 ]; then
+  require_new_magisk
+fi
 install_module
 exit 0
-
