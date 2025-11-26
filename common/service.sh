@@ -1,4 +1,3 @@
-
 #!/system/bin/sh
 MODDIR=${0%/*}
 wait_until_boot_complete() {
@@ -107,8 +106,8 @@ echo "570" /proc/sys/kernel/perf_event_mlock_kb
 echo "0" /proc/sys/kernel/sched_boost
 echo "95" /proc/sys/kernel/sched_downmigrate
 echo "160" /proc/sys/kernel/sched_group_upmigrate
-    sleep 2
-su -lp 2000 -c "cmd notification post -S bigtext -t 'Tairitsu 🎻✅' 'Tag' 'My job has done, $(getprop ro.soc.model). Now, let your new owner handle this.'"
+    sleep 1
+su -lp 2000 -c "cmd notification post -S bigtext -t 'Tairitsu 🎻✅' 'Tag' 'My job has done, $(getprop ro.product.board). Can i rest now? I really sleepy.
 sleep 1
     exit 0
     
