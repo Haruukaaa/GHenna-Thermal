@@ -1,5 +1,9 @@
 #!/system/bin/sh
 MODDIR ${0%/*}
+# Set zram configurations
+echo 4096M >/sys/block/zram0/disksize
+mkswap /data/zram0
+swapon  /data/zram0
 setprop ro.vendor.qti.config.zram true
 # This script will be executed in post-fs-data mode
     # disable I/O debugging
