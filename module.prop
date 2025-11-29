@@ -1,9 +1,9 @@
-id=gehenna-tweaks
+id=gehenna
 name=🍃 GHenna Tweaks
-version=Codename | Tairitsu 1.0
+version=Codename | Lilith 2.0
 versionCode=1
 author=Haruka
-description=Lets melody will help you gain performance.
+description=Shall we together to mix our power?
 Device=Universal
 banner=banner.png
 updateJson=https://raw.githubusercontent.com/Hirauki/GHenna-Thermal/refs/heads/main/update.json
