@@ -7,6 +7,7 @@
 - Rework kernel source too
 - Rework task profile and add powerhint too
 - Drop CPU and GPU limiter
+- Adding auto enable 60hz limiter on Developer Options if your game stuck at 60Hz
 
 ## 1.0
 - Added task profiler.json for better management on task
