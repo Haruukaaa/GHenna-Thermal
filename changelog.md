@@ -1,4 +1,10 @@
-# CL - GHenna Thermal
+# CL - GHenna Tweaks
+
+## 2.0
+- New Codename now is Lilith
+- Rework some strings
+- Fix a stuck shell notification but sometimes didn't show up
+- Rework kernel source too
 
 ## 1.0
 - Added task profiler.json for better management on task
