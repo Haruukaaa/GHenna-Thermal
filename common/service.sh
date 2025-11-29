@@ -13,32 +13,7 @@ wait_until_boot_complete() {
   rm -f "$test_file"
 }
 
-disable_gpu_limits() {
-    if [ -f "/proc/gpufreq/gpufreq_power_limited" ]; then
-        for setting in ignore_batt_oc ignore_batt_percent ignore_low_batt ignore_thermal_protect ignore_pbm_limited; do
-            if ! grep -q "$setting 1" "/proc/gpufreq/gpufreq_power_limited"; then
-                echo "$setting 1" > /proc/gpufreq/gpufreq_power_limited
-            fi
-        done
-    fi
-}
-
-set_cpu_limits() {
-    if [ -f /sys/devices/virtual/thermal/thermal_message/cpu_limits ]; then
-        for cpu in 0 2 4 6 7; do
-            maxfreq_path="/sys/devices/system/cpu/cpu$cpu/cpufreq/cpuinfo_max_freq"
-            if [ -f "$maxfreq_path" ]; then
-                maxfreq=$(cat "$maxfreq_path")
-                if [ -n "$maxfreq" ] && [ "$maxfreq" -gt 0 ]; then
-                    current_limit=$(grep "cpu$cpu" /sys/devices/virtual/thermal/thermal_message/cpu_limits)
-                    if [ -z "$current_limit" ] || [ "$current_limit" != "cpu$cpu $maxfreq" ]; then
-                        echo "cpu$cpu $maxfreq" > /sys/devices/virtual/thermal/thermal_message/cpu_limits
-                    fi
-                fi
-            fi
-        done
-    fi
-}
+su -lp 2000 -c "cmd notification post -S bigtext -t 'Lilith' 'Tag' '$(getprop ro.product.board) Darling, shall we go date right now?.
 
 sleep 1
 rm -f /storage/emulated/0/*.log;
@@ -50,6 +25,18 @@ settings put global device_idle_constants
 sleep 1
 su -c "pm disable com.google.android.gms/.chimera.GmsIntentOperationService"
 su -c "pm disable com.google.android.gms/com.google.android.gms.mdm.receivers.MdmDeviceAdminReceiver"
+cmd accessibility stop-trace
+cmd migard dump-trace false
+cmd migard start-trace false
+cmd migard stop-trace true
+cmd migard trace-buffer-size 0
+cmd input_method tracing stop
+cmd window tracing size 0
+cmd window tracing stop
+cmd statusbar tracing stop
+logcat -G 64K
+logcat -b main -G 128K
+logcat -c
 
 setprop debug.sf.hw 1
 setprop debug.sf.latch_unsignaled 1
@@ -107,8 +94,4 @@ echo "0" /proc/sys/kernel/sched_boost
 echo "95" /proc/sys/kernel/sched_downmigrate
 echo "160" /proc/sys/kernel/sched_group_upmigrate
     sleep 1
-su -lp 2000 -c "cmd notification post -S bigtext -t 'Tairitsu 🎻✅' 'Tag' 'My job has done, $(getprop ro.product.board). Can i rest now? I really sleepy.
-sleep 1
     exit 0
-    
-    
