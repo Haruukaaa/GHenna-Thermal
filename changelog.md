@@ -6,6 +6,7 @@
 - Fix a stuck shell notification but sometimes didn't show up
 - Rework kernel source too
 - Rework task profile and add powerhint too
+- Drop CPU and GPU limiter
 
 ## 1.0
 - Added task profiler.json for better management on task
