@@ -60,6 +60,18 @@ ro.vendor.qti.sys.fw.bservice_enable=true
 ro.vendor.qti.sys.fw.bservice_limit=128
 ro.vendor.qti.sys.fw.bservice_age=10000
 ro.vendor.qti.sys.fw.bg_apps_limit=256
+debug.systemui.latency_tracking=false
+debug.trace_resource_preload=false
+debug.track_amkill=false
+debug.perf_event_max_sample_rate=0
+debug.perf_cpu_time_max_percent=0
+debug.perf_event_mlock_kb=0
+persist.traced.enable=0
+persist.sys.logkit.ctrl_enable=0
+persist.sys.logkit.disable_log=1
+debug.hwui.trace_gpu_resources=false
+debug.sf.enable_transaction_tracing=0
+debug.atrace.tags.enableflags=0
 
 #tweak
 persist.sys.NV_FPSLIMIT=120
@@ -88,6 +100,7 @@ windowsmgr.max_events_per_sec=120
 view.scroll_friction=0
 ro.min_pointer_dur=8
 touch.deviceType=touchScreen
+debug.graphics.game_default_frame_rate.disabled=1
 
 #Improve global touch screen response
 debug.egl.hw=1
@@ -100,4 +113,3 @@ ro.config.hw_quickpoweron=true
 # Disable Unnecessary 
 ro.hwui.disable_scissor_opt=false
 ro.zygote.disable_gl_preload=true
-
