@@ -19,7 +19,7 @@ wait_until_login() {
 
 wait_until_login
 
-su -lp 2000 -c "cmd notification post -S bigtext -t 'Lilith' 'Tag' '$(getprop ro.product.board) Darling, shall we go date right now?.
+su -lp 2000 -c "cmd notification post -S bigtext -t 'Lilith' 'Tag' '$(getprop ro.product.board) Darling, shall we go date right now?.'"
 
 sleep 1
 rm -f /storage/emulated/0/*.log;
@@ -62,11 +62,8 @@ setprop debug.sf.prime_shader_cache.clipped_dimmed_image_layers false
         echo "1" > "$touch" 2>/dev/null
         chmod 444 "$touch" >/dev/null 2>&1  
     fi
-done
-
 for queue in /sys/block/*/queue; do
     echo "0" > "$queue/iostats"
-done
 chmod 755 /sys/module/qti_haptics/parameters/vmax_mv_override
 echo 500 > /sys/module/qti_haptics/parameters/vmax_mv_override
 chmod 444 /sys/module/qti_haptics/parameters/vmax_mv_override
