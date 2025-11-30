@@ -1,10 +1,14 @@
 #!/system/bin/sh
-MODDIR=${0%/*}
-wait_until_boot_complete() {
+
+# GHenna Lilith
+wait_until_login() {
+  # In case of /data encryption is disabled
   while [[ "$(getprop sys.boot_completed)" != "1" ]]; do
-    sleep 1
+    sleep 3
   done
- test_file="/storage/emulated/0/Android/.PERMISSION_TEST"
+
+  # We don't have the permission to rw "/storage/emulated/0" before the user unlocks the screen
+  test_file="/storage/emulated/0/Android/.PERMISSION_TEST"
   true >"$test_file"
   while [[ ! -f "$test_file" ]]; do
     true >"$test_file"
@@ -12,6 +16,8 @@ wait_until_boot_complete() {
   done
   rm -f "$test_file"
 }
+
+wait_until_login
 
 su -lp 2000 -c "cmd notification post -S bigtext -t 'Lilith' 'Tag' '$(getprop ro.product.board) Darling, shall we go date right now?.
 
@@ -75,16 +81,15 @@ echo "0" > /sys/module/kernel/parameters/panic_on_warn
 echo "0" > /sys/module/kernel/parameters/panic_on_oops
 echo "0" > /sys/vm/panic_on_oom
 
-echo '0' > /sys/module/lowmemorykiller/parameters/enable_adaptive_lmk
-echo "0 0 0 0" > /proc/sys/kernel/printk
-echo "0" > /sys/kernel/printk_mode/printk_mode
-echo "0" > /sys/module/printk/parameters/cpu
-echo "0" > /sys/module/printk/parameters/pid
-echo "0" > /sys/module/printk/parameters/printk_ratelimit
-echo "0" > /sys/module/printk/parameters/time
-echo "1" > /sys/module/printk/parameters/console_suspend
-echo "1" > /sys/module/printk/parameters/ignore_loglevel
-echo "off" > /proc/sys/kernel/printk_devkmsg
+echo "0 0 0 0" > "/proc/sys/kernel/printk"
+echo "0" > "/sys/kernel/printk_mode/printk_mode"
+echo "0" > "/sys/module/printk/parameters/cpu"
+echo "0" > "/sys/module/printk/parameters/pid"
+echo "0" > "/sys/module/printk/parameters/printk_ratelimit"
+echo "0" > "/sys/module/printk/parameters/time"
+echo "1" > "/sys/module/printk/parameters/console_suspend"
+echo "1" > "/sys/module/printk/parameters/ignore_loglevel"
+echo "off" > "/proc/sys/kernel/printk_devkmsg"
 echo "0" > /proc/sys/kernel/hung_task_timeout_secs
 echo "0" > /proc/sys/kernel/softlockup_panic
 echo "55" /proc/sys/kernel/perf_cpu_time_max_percent
@@ -93,5 +98,6 @@ echo "570" /proc/sys/kernel/perf_event_mlock_kb
 echo "0" /proc/sys/kernel/sched_boost
 echo "95" /proc/sys/kernel/sched_downmigrate
 echo "160" /proc/sys/kernel/sched_group_upmigrate
-    sleep 1
+
+su -lp 2000 -c "cmd notification post -S bigtext -t 'Lilith' 'Tag' '$(getprop ro.product.board) Darling, i bored, give me a hug.'"
     exit 0
