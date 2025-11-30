@@ -57,12 +57,6 @@ setprop debug.sf.prime_shader_cache.image_dimmed_layers false;
 setprop debug.sf.prime_shader_cache.pip_image_layers false;
 setprop debug.sf.prime_shader_cache.transparent_image_dimmed_layers false;
 setprop debug.sf.prime_shader_cache.clipped_dimmed_image_layers false
-    if [ -f "$touch" ]; then
-        chmod 644 "$touch" >/dev/null 2>&1
-        echo "1" > "$touch" 2>/dev/null
-        chmod 444 "$touch" >/dev/null 2>&1  
-    fi
-    
 for queue in /sys/block/*/queue; do
     echo "0" > "$queue/iostats"
     done
