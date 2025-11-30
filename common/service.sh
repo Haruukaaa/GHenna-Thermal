@@ -62,8 +62,10 @@ setprop debug.sf.prime_shader_cache.clipped_dimmed_image_layers false
         echo "1" > "$touch" 2>/dev/null
         chmod 444 "$touch" >/dev/null 2>&1  
     fi
+    
 for queue in /sys/block/*/queue; do
     echo "0" > "$queue/iostats"
+    done
 chmod 755 /sys/module/qti_haptics/parameters/vmax_mv_override
 echo 500 > /sys/module/qti_haptics/parameters/vmax_mv_override
 chmod 444 /sys/module/qti_haptics/parameters/vmax_mv_override
