@@ -1,5 +1,12 @@
 # CL - GHenna Tweaks
 
+
+## R-3.0
+- New Codename rebrand to Kohaku
+- Same as before, but some change it
+- Using tweaks from [@al4uu](https://github.com/al4uu)
+- Rework kernel tweaks
+
 ## 2.0
 - New Codename now is Lilith
 - Rework some strings
