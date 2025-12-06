@@ -6,6 +6,8 @@
 - Same as before, but some change it
 - Using tweaks from [@al4uu](https://github.com/al4uu)
 - Rework kernel tweaks
+- Rework system folder from [@liesudahbelajar](https://t.me/lieudahbelajar)
+- Rework any system prop and service too
 
 ## 2.0
 - New Codename now is Lilith
