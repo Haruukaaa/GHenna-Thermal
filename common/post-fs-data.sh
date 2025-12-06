@@ -1,7 +1,7 @@
 #!/system/bin/sh
 MODDIR ${0%/*}
 # Set zram configurations
-echo 4096M >/sys/block/zram0/disksize
+echo 3072M >/sys/block/zram0/disksize
 mkswap /data/zram0
 swapon  /data/zram0
 setprop ro.vendor.qti.config.zram true
@@ -170,12 +170,12 @@ resetprop -n ro.hwui.text_small_cache_height 1024
 resetprop -n ro.hwui.text_large_cache_width 2048
 resetprop -n ro.hwui.text_large_cache_height 2048
 ####################################
-# Tombstone (by @modulostk)
+# LMK
 ####################################
-# Max tombstone count [/data/tombstones]
-resetprop -n tombstoned.max_tombstone_count 0
-# Max anr tombstone count [/data/anr]
-resetprop -n tombstoned.max_anr_count 0
+resetprop -n ro.lmk.debug false
+resetprop -n ro.lmk.upgrade_pressure 40
+resetprop -n ro.lmk.downgrade_pressure 60
+resetprop -n ro.lmk.kill_heaviest_task false
 while :
 do
     sf=$(service list | grep -c "SurfaceFlinger:")
