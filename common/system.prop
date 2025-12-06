@@ -11,6 +11,7 @@ debug.overlayui.enable=1
 debug.performance.tuning=1
 hw3d.force=1
 persist.sys.ui.hw=1
+persist.service.gfx.gpu_rendering_priority 1
 ro.config.enable.hw_accel=true
 ro.fb.mode=1
 video.accelerate.hw=1
@@ -74,12 +75,13 @@ debug.sf.enable_transaction_tracing=0
 debug.atrace.tags.enableflags=0
 
 #tweak
-persist.sys.NV_FPSLIMIT=120
+persist.sys.NV_FPSLIMIT=90
 persist.sys.NV_POWERMODE=1
 persist.sys.NV_PROFVER=15
 persist.sys.NV_STEREOCTRL=0
 persist.sys.NV_STEREOSEPCHG=0
-persist.sys.NV_STEREOSEP=30
+persist.sys.NV_STEREOSEP=20
+persist.sys.purgeable_assets=1
 
 # SkiaGL Render
 debug.hwui.renderer=skiagl
@@ -87,6 +89,7 @@ debug.renderengine.backend=skiaglthreaded
 ro.hwui.hardware.skiaglthreaded=true
 ro.hwui.use_skiaglthreaded=true
 ro.ui.pipeline=skiaglthreaded
+persist.service.gfx.renderthread 1
 
 #Skia tracing disabler
 debug.hwui.render_dirty_regions=false
