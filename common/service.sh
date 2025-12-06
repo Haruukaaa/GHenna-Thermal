@@ -19,7 +19,7 @@ wait_until_login() {
 
 wait_until_login
 
-su -lp 2000 -c "cmd notification post -S bigtext -t 'LilKohakuith' 'Tag' 'Why did $(getprop ro.product.board) leave me on read?.'"
+su -lp 2000 -c "cmd notification post -S bigtext -t 'Kohaku' 'Tag' 'Why did $(getprop ro.product.board) leave me on read?.'"
 
 sleep 1
 rm -f /storage/emulated/0/*.log;
@@ -147,5 +147,5 @@ echo "1" > /sys/module/spurious/parameters/noirqdebug
 echo "0" > /sys/kernel/debug/sde_rotator0/evtlog/enable
 
 
-su -lp 2000 -c "cmd notification post -S bigtext -t 'Lilith' 'Tag' 'Im not sleeping, just watching $(getprop ro.product.board) kufufu.'"
+su -lp 2000 -c "cmd notification post -S bigtext -t 'Kohaku' 'Tag' 'Im not sleeping, just watching $(getprop ro.product.board) kufufu.'"
     exit 0
