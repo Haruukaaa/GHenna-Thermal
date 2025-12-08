@@ -1,5 +1,11 @@
 # CL - GHenna Tweaks
 
+## R4.0
+- New Codename to Liv:Empyrea
+- Rework again about system prop
+- Much rework on other stuff too
+- Bringback Fast Charging max to 33W
+- Rework LMK too
 
 ## R-3.0
 - New Codename rebrand to Kohaku
