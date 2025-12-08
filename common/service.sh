@@ -4,6 +4,7 @@
 wait_until_login() {
   # In case of /data encryption is disabled
   while [[ "$(getprop sys.boot_completed)" != "1" ]]; do
+  sh /system/etc/.nth_fc/.fc_main.sh
     sleep 3
   done
 
@@ -17,9 +18,18 @@ wait_until_login() {
   rm -f "$test_file"
 }
 
-wait_until_login
+ext() 
+{
+    if [ -f ${2} ]; then
+        chmod 0666 ${2}
+        echo ${1} > ${2}
+        chmod 0444 ${2}
+    fi
+}
 
-su -lp 2000 -c "cmd notification post -S bigtext -t 'Kohaku' 'Tag' 'Why did $(getprop ro.product.board) leave me on read?.'"
+ext 5500000 /sys/class/power_supply/battery/constant_charge_current_max
+
+su -lp 2000 -c "cmd notification post -S bigtext -t 'Empyrea' 'Tag' '$(getprop ro.product.board) Battle cost reduced, I need to be faster..'"
 
 sleep 1
 rm -f /storage/emulated/0/*.log;
@@ -147,5 +157,5 @@ echo "1" > /sys/module/spurious/parameters/noirqdebug
 echo "0" > /sys/kernel/debug/sde_rotator0/evtlog/enable
 
 
-su -lp 2000 -c "cmd notification post -S bigtext -t 'Kohaku' 'Tag' 'Im not sleeping, just watching $(getprop ro.product.board) kufufu.'"
+su -lp 2000 -c "cmd notification post -S bigtext -t 'Empyrea' 'Tag' '$(getprop ro.product.board)I would not forgive myself for not being there when they need me.'"
     exit 0
