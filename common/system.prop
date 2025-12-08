@@ -86,16 +86,19 @@ persist.sys.purgeable_assets=1
 # SkiaGL Render
 debug.hwui.renderer=skiagl
 debug.renderengine.backend=skiaglthreaded
+debug.renderengine.graphite=true
 ro.hwui.hardware.skiaglthreaded=true
 ro.hwui.use_skiaglthreaded=true
 ro.ui.pipeline=skiaglthreaded
-persist.service.gfx.renderthread 1
+persist.service.gfx.renderthread=1
 
 #Skia tracing disabler
 debug.hwui.render_dirty_regions=false
 debug.hwui.pipeline=false
 debug.hwui.overdraw=false
 debug.hwui.skia_atrace_enabled=false
+debug.renderengine.backend=skiaglhreaded
+debug.stagefright.renderengine.backend=threaded
 renderthread.skia.reduceopstasksplitting=true
 
 #Improve sliding response
@@ -115,4 +118,6 @@ ro.config.hw_quickpoweron=true
 
 # Disable Unnecessary 
 ro.hwui.disable_scissor_opt=false
-ro.zygote.disable_gl_preload=true
+ro.zygote.disable_gl_preload=1
+
+
