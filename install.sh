@@ -8,7 +8,7 @@ LATESTARTSERVICE=true
 print_modname() {
   ui_print "      Welcome to Ghenna Tweaks  ʕ⁠·⁠ᴥ⁠·⁠ʔ     "
   sleep 1
-  ui_print "Codename           : Lilith               "
+  ui_print "Codename           : Empyrea               "
   sleep 1
   ui_print "Created            : Hirauki"
   sleep 1
@@ -80,10 +80,10 @@ on_install() {
 
 set_permissions() {
   # The following is the default rule, DO NOT remove
-  set_perm_recursive $MODPATH 0 0 0777 0755
-  set_perm $MODPATH/service.sh 0 0 0777 0755
-  set_perm $MODPATH/system/bin/P0 0 0 0755 0755
-  set_perm $MODPATH/system/bin/P1 0 0 0755 0755
+  set_perm_recursive $MODPATH 0 0 0777 0777
+  set_perm $MODPATH/service.sh 0 0 0777 0777
+  set_perm $MODPATH/system/bin/P0 0 0 0755 0777
+  set_perm $MODPATH/system/bin/P1 0 0 0755 0777
 
   [[ -e "/data/system/package_cache" ]] && rm -rf /data/system/package_cache/*
   
