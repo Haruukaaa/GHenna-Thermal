@@ -1,4 +1,0 @@
-#!/system/bin/sh
-# Disable Thermal Throttling
-
-exit 0
