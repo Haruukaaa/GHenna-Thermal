@@ -5,7 +5,7 @@
 - Rework again about system prop
 - Much rework on other stuff too
 - Bringback Fast Charging max to 33W
-- Rework LMK too
+- Rework LMKD
 
 ## R-3.0
 - New Codename rebrand to Kohaku
