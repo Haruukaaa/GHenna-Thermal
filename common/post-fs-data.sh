@@ -176,6 +176,11 @@ resetprop -n ro.lmk.debug false
 resetprop -n ro.lmk.upgrade_pressure 40
 resetprop -n ro.lmk.downgrade_pressure 60
 resetprop -n ro.lmk.kill_heaviest_task false
+resetprop -n ro.lmk.psi_complete_stall_ms=500
+resetprop -n ro.lmk.psi_partial_stall_ms=70
+resetprop -n ro.lmk.thrashing_limit=100
+resetprop -n ro.lmk.thrashing_limit_decay=10
+resetprop -n ro.lmk.swap_util_max=100
 while :
 do
     sf=$(service list | grep -c "SurfaceFlinger:")
