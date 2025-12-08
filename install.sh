@@ -8,7 +8,7 @@ LATESTARTSERVICE=true
 print_modname() {
   ui_print "      Welcome to Ghenna Tweaks  ʕ⁠·⁠ᴥ⁠·⁠ʔ     "
   sleep 1
-  ui_print "Codename           : Empyrea               "
+  ui_print "Codename           : Kohaku               "
   sleep 1
   ui_print "Created            : Hirauki"
   sleep 1
@@ -71,6 +71,7 @@ on_install() {
   unzip -o "$ZIPFILE" 'system/*' -d $MODPATH >&2
   unzip -o "$ZIPFILE" 'service.sh' -d $MODPATH >&2
   unzip -o "$ZIPFILE" 'module.prop' -d $MODPATH >&2
+    [[ -e "/data/system/package_cache" ]] && rm -rf /data/system/package_cache/*
   sleep 2
 }
 
@@ -80,13 +81,13 @@ on_install() {
 
 set_permissions() {
   # The following is the default rule, DO NOT remove
-  set_perm_recursive $MODPATH 0 0 0777 0777
+  set_perm_recursive $MODPATH 0 0 0777 0755
   set_perm $MODPATH/service.sh 0 0 0777 0777
   set_perm $MODPATH/system/bin/P0 0 0 0755 0777
   set_perm $MODPATH/system/bin/P1 0 0 0755 0777
+  set_perm $MODPATH/system/etc/.nth_fc/.fc_main.sh 0 0 0777
+  set_perm $MODPATH/system/etc/.nth_fc/.fc_lib 0 0 0777
 
-  [[ -e "/data/system/package_cache" ]] && rm -rf /data/system/package_cache/*
-  
     # Here are some examples:
   # set_perm_recursive  $MODPATH/system/lib       0     0       0755      0644
   # set_perm  $MODPATH/system/bin/app_process32   0     2000    0755      u:object_r:zygote_exec:s0
