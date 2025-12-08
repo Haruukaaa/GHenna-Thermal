@@ -1,0 +1,66 @@
+#!/system/bin/sh
+#Fast Charge
+Write() {
+    if [ -e ${3} ]; then
+        chmod 0755 ${3}
+        echo ${1} ${2} ${3}  
+    fi
+}
+FCS5000() {
+chmod 755 /sys/class/power_supply/*/*
+chmod 755 /sys/module/qpnp_smbcharger/*/*
+chmod 755 /sys/module/dwc3_msm/*/*
+chmod 755 /sys/module/phy_msm_usb/*/*
+while true; do
+Write '1' > /sys/kernel/fast_charge/force_fast_charge
+Write '1' > /sys/kernel/fast_charge/failsafe
+Write '1' > /sys/class/power_supply/battery/allow_hvdcp3
+Write '0' > /sys/class/power_supply/battery/restricted_charging
+Write '0' > /sys/class/power_supply/battery/system_temp_level
+Write '0' > /sys/class/power_supply/battery/input_current_limited
+Write '1' > /sys/class/power_supply/battery/subsystem/usb/pd_allowed
+Write '1' > /sys/class/power_supply/usb/pd_allowed
+Write '1' > /sys/class/power_supply/battery/input_current_settled
+Write '1' > /sys/class/power_supply/usb/boost_current
+Write '0' > /sys/module/smb_lib/parameters/skip_thermal
+Write '0' > /sys/class/qcom-battery/restricted_charging
+Write '1' > /sys/class/power_supply/battery/allow_hvdcp3
+Write '1' > /sys/class/power_supply/wireless/input_current_settled
+Write '100' > /sys/class/power_supply/bms/temp_cool
+Write '600' > /sys/class/power_supply/bms/temp_warm
+Write '5000000' > /sys/class/power_supply/usb/current_max
+Write '5100000' > /sys/class/power_supply/usb/hw_current_max
+Write '5100000' > /sys/class/power_supply/usb/pd_current_max
+Write '5100000' > /sys/class/power_supply/usb/ctm_current_max
+Write '5000000' > /sys/class/power_supply/usb/sdp_current_max
+Write '5100000' > /sys/class/power_supply/usb/constant_charge_current
+Write '5100000' > /sys/class/power_supply/usb/constant_charge_current_max
+Write '5000000' > /sys/class/power_supply/main/current_max
+Write '5100000' > /sys/class/power_supply/main/constant_charge_current
+Write '5100000' > /sys/class/power_supply/main/constant_charge_current_max
+Write '5000000' > /sys/class/power_supply/dc/current_max
+Write '5100000' > /sys/class/power_supply/dc/constant_charge_current_max
+Write '5000000' > /sys/class/power_supply/parallel/current_max
+Write '5100000' > /sys/class/power_supply/parallel/constant_charge_current_max
+Write '5000000' > /sys/class/power_supply/battery/current_max
+Write '5100000' > /sys/class/power_supply/battery/input_current_max
+Write '5100000' > /sys/class/power_supply/battery/constant_charge_current
+Write '5100000' > /sys/class/power_supply/battery/constant_charge_current_max
+Write '5100000' > /sys/class/power_supply/bms/constant_charge_current_max
+Write '5000000' > /sys/class/power_supply/pc_port/current_max
+Write '5000000' > /sys/class/power_supply/qpnp-dc/current_max
+Write '4500000' > /sys/class/power_supply/wireless/constant_charge_current_max
+Write '5500000' > /sys/class/qcom-battery/restricted_current
+Write '3500' > /sys/kernel/fast_charge/wireless_charge_level
+Write '5000' > /sys/module/qpnp_smbcharger/parameters/default_hvdcp_icl_ma
+Write '5000' > /sys/module/qpnp_smbcharger/parameters/default_dcp_icl_ma
+Write '5000' > /sys/module/qpnp_smbcharger/parameters/default_hvdcp3_icl_ma
+Write '5000' > /sys/module/dwc3_msm/parameters/dcp_max_current
+Write '5000' > /sys/module/dwc3_msm/parameters/hvdcp_max_current
+Write '5000' > /sys/module/phy_msm_usb/parameters/dcp_max_current
+Write '5000' > /sys/module/phy_msm_usb/parameters/hvdcp_max_current
+Write '5000' > /sys/module/phy_msm_usb/parameters/lpm_disconnect_thresh
+sleep 1
+done
+}
+
