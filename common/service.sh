@@ -1,21 +1,12 @@
 #!/system/bin/sh
 
-# GHenna Kohaku
+# GHenna Liv
 wait_until_login() {
   # In case of /data encryption is disabled
   while [[ "$(getprop sys.boot_completed)" != "1" ]]; do
   sh /system/etc/.nth_fc/.fc_main.sh
     sleep 3
   done
-
-  # We don't have the permission to rw "/storage/emulated/0" before the user unlocks the screen
-  test_file="/storage/emulated/0/Android/.PERMISSION_TEST"
-  true >"$test_file"
-  while [[ ! -f "$test_file" ]]; do
-    true >"$test_file"
-    sleep 1
-  done
-  rm -f "$test_file"
 }
 
 ext() 
@@ -39,8 +30,8 @@ dumpsys deviceidle enable light
 dumpsys deviceidle enable deep
 settings put global device_idle_constants
 sleep 1
-su -c "pm disable com.google.android.gms/.chimera.GmsIntentOperationService"
-su -c "pm disable com.google.android.gms/com.google.android.gms.mdm.receivers.MdmDeviceAdminReceiver"
+su -c pm disable com.google.android.gms/.chimera.GmsIntentOperationService
+su -c pm disable com.google.android.gms/com.google.android.gms.mdm.receivers.MdmDeviceAdminReceiver
 cmd accessibility stop-trace
 cmd migard dump-trace false
 cmd migard start-trace false
@@ -54,6 +45,12 @@ logcat -G 64K
 logcat -b main -G 128K
 logcat -c
 
+change_task_cgroup "surfaceflinger" "top-app" "cpuset"
+change_task_cgroup "surfaceflinger" "foreground" "stune"
+change_task_cgroup "android.hardware.graphics.composer" "top-app" "cpuset"
+change_task_cgroup "android.hardware.graphics.composer" "foreground" "stune"
+change_task_nice "surfaceflinger" "-20"
+change_task_nice "android.hardware.graphics.composer" "-20"
 setprop debug.sf.hw 1
 setprop debug.sf.latch_unsignaled 1
 setprop debug.sf.prime_shader_cache.solid_layers true;
@@ -67,6 +64,10 @@ setprop debug.sf.prime_shader_cache.image_dimmed_layers false;
 setprop debug.sf.prime_shader_cache.pip_image_layers false;
 setprop debug.sf.prime_shader_cache.transparent_image_dimmed_layers false;
 setprop debug.sf.prime_shader_cache.clipped_dimmed_image_layers false
+change_task_nice "kswapd" "-2"
+change_task_nice "oom_reaper" "-2"
+change_task_affinity "kswapd" "7f"
+change_task_affinity "oom_reaper" "7f"
 for queue in /sys/block/*/queue; do
     echo "0" > "$queue/iostats"
     done
@@ -147,6 +148,14 @@ echo "N" > /sys/module/sync/parameters/fsync_enabled
 echo "1" > /sys/module/printk/parameters/ignore_loglevel
 echo "0" > /sys/module/printk/parameters/printk_ratelimit
 echo "1" > /sys/module/printk/parameters/console_suspend
+echo "0" /proc/sys/kernel/panic
+echo "0" /proc/sys/kernel/panic_on_oops
+echo "0" /proc/sys/kernel/panic_on_warn
+echo "0" /proc/sys/kernel/panic_on_rcu_stall
+echo "0" /sys/module/kernel/parameters/panic
+echo "0" /sys/module/kernel/parameters/panic_on_warn
+echo "0" /sys/module/kernel/parameters/pause_on_oops
+echo "0" /sys/module/kernel/panic_on_rcu_stall
 
 echo "3" > /proc/sys/vm/drop_caches
 echo "1" > /proc/sys/vm/compact_memory
@@ -155,7 +164,6 @@ echo "80" > /proc/sys/vm/vfs_cache_pressure
 echo "0" > /sys/kernel/debug/dri/0/debug/enable
 echo "1" > /sys/module/spurious/parameters/noirqdebug
 echo "0" > /sys/kernel/debug/sde_rotator0/evtlog/enable
-
 
 su -lp 2000 -c "cmd notification post -S bigtext -t 'Empyrea' 'Tag' '$(getprop ro.product.board)I would not forgive myself for not being there when they need me.'"
     exit 0
