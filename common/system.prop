@@ -144,4 +144,3 @@ video.accelerate.hw=1
 
 # Disable Unnecessary 
 ro.hwui.disable_scissor_opt=false
-ro.zygote.disable_gl_preload=1
