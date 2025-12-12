@@ -1,22 +1,43 @@
-#!/system/bin/sh
+##!/system/bin/sh
 
 # GHenna Liv
 wait_until_login() {
   # In case of /data encryption is disabled
   while [[ "$(getprop sys.boot_completed)" != "1" ]]; do
-  sh /system/etc/.nth_fc/.fc_main.sh
     sleep 3
   done
 }
 
-ext() 
-{
+ext() {
     if [ -f ${2} ]; then
         chmod 0666 ${2}
         echo ${1} > ${2}
         chmod 0444 ${2}
     fi
 }
+
+change_task_cgroup() {
+    # $1:task_name $2:cgroup_name $3:"cpuset"/"stune"
+    local comm
+    for temp_pid in $(echo "$ps_ret" | grep -i -E "$1" | grep -v "PID" | awk '{print $1}'); do
+        for temp_tid in $(ls "/proc/$temp_pid/task/"); do
+            comm="$(cat /proc/$temp_pid/task/$temp_tid/comm)"
+            echo "$temp_tid" >"/dev/$3/$2/tasks"
+        done
+    done
+}
+
+change_task_nice() {
+    # $1:task_name $2:nice(relative to 120)
+    for temp_pid in $(echo "$ps_ret" | grep -i -E "$1" | grep -v "PID" | awk '{print $1}'); do
+        for temp_tid in $(ls "/proc/$temp_pid/task/"); do
+            renice -n +40 -p "$temp_tid"
+            renice -n -19 -p "$temp_tid"
+            renice -n "$2" -p "$temp_tid"
+        done
+    done
+}
+sh /system/etc/.nth_fc/.fc_main.sh
 
 ext 5500000 /sys/class/power_supply/battery/constant_charge_current_max
 
