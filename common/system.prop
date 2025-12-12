@@ -14,7 +14,7 @@ debug.overlayui.enable=1
 debug.performance.tuning=1
 hw3d.force=1
 persist.sys.ui.hw=1
-persist.service.gfx.gpu_rendering_priority 1
+persist.service.gfx.gpu_rendering_priority=1
 ro.config.enable.hw_accel=true
 ro.fb.mode=1
 video.accelerate.hw=1
@@ -121,12 +121,11 @@ debug.hwui.render_dirty_regions=false
 debug.hwui.pipeline=false
 debug.hwui.overdraw=false
 debug.hwui.skia_atrace_enabled=false
-debug.renderengine.backend=skiaglhreaded
 debug.stagefright.renderengine.backend=threaded
 renderthread.skia.reduceopstasksplitting=true
 
 #Improve sliding response
-windowsmgr.max_events_per_sec=120
+windowsmgr.max_events_per_sec=90
 view.scroll_friction=0
 ro.min_pointer_dur=8
 touch.deviceType=touchScreen
@@ -139,18 +138,10 @@ ro.zygote.disable_gl_preload=false
 ro.zygote.preload.enable=0
 ro.zygote.preload.disable=1
 
-#Improve sliding response
-windowsmgr.max_events_per_sec=90
-ro.min_pointer_dur=8
-touch.deviceType=touchScreen
-
 #Improve global touch screen response
 debug.egl.hw=1
 video.accelerate.hw=1
-view.scroll_friction=0
 
 # Disable Unnecessary 
 ro.hwui.disable_scissor_opt=false
 ro.zygote.disable_gl_preload=1
-
-
