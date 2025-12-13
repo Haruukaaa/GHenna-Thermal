@@ -41,7 +41,7 @@ sh /system/etc/.nth_fc/.fc_main.sh
 
 ext 5500000 /sys/class/power_supply/battery/constant_charge_current_max
 
-su -lp 2000 -c "cmd notification post -S bigtext -t 'Empyrea' 'Tag' '$(getprop ro.product.board) Battle cost reduced, I need to be faster..'"
+su -lp 2000 -c "cmd notification post -S bigtext -t 'Empyrea' 'Tag' 'Morning, $(getprop ro.product.board). Long time  waiting for you to wake up.'"
 
 sleep 1
 rm -f /storage/emulated/0/*.log;
@@ -186,5 +186,5 @@ echo "0" > /sys/kernel/debug/dri/0/debug/enable
 echo "1" > /sys/module/spurious/parameters/noirqdebug
 echo "0" > /sys/kernel/debug/sde_rotator0/evtlog/enable
 
-su -lp 2000 -c "cmd notification post -S bigtext -t 'Empyrea' 'Tag' '$(getprop ro.product.board)I would not forgive myself for not being there when they need me.'"
+su -lp 2000 -c "cmd notification post -S bigtext -t 'Empyrea' 'Tag' 'Thank you, $(getprop ro.product.board).'"
     exit 0
