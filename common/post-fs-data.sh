@@ -1,7 +1,7 @@
 #!/system/bin/sh
 MODDIR ${0%/*}
 # Set zram configurations
-echo 3072M >/sys/block/zram0/disksize
+echo 4096M >/sys/block/zram0/disksize
 mkswap /data/zram0
 swapon  /data/zram0
 setprop ro.vendor.qti.config.zram true
@@ -54,24 +54,6 @@ resetprop -n persist.wpa_supplicant.debug false
 #Optimize system sleep (metaphysics)
 #resetprop -n pm.sleep_mode 1
 #resetprop -n ro.ril.disable.power.collapse 0
-
-#add × @LeanHijosdesusMadres
-#https://stackoverflow.com/questions/66423447/how-to-identify-slow-queries-in-sqlite
-resetprop -n db.log.slow_query_threshold 999
-#https://android.googlesource.com/device/lge/hammerhead/+/481f438^!/
-resetprop -n debug.qualcomm.sns.hal 0
-resetprop -n persist.debug.sensors.hal 0
-resetprop -n debug.qualcomm.sns.daemon 0
-resetprop -n debug.qualcomm.sns.libsensor1 0
-#https://android.googlesource.com/platform/system/core/+/1bbef88^!/
-resetprop -n sys.init_log_level 0
-#https://android.googlesource.com/platform/system/core/+/df5d128^!/
-resetprop -n logd.logpersistd.enable false
-#https://android.googlesource.com/platform/system/bt/+/refs/tags/android-10.0.0_r9/hci/src/btsnoop.cc
-resetprop -n persist.bluetooth.btsnooplogmode disabled
-#https://android.googlesource.com/platform/system/extras/+/master/ANRdaemon/ANRdaemon.cpp
-resetprop -n debug.atrace.app_cmdlines 0
-resetprop -n debug.atrace.tags.enableflags 0
 
 ####################################
 # Disable Unnecessary Things (by @nonosvaimos)
@@ -158,38 +140,50 @@ resetprop -n persist.sys.dalvik.multithread true
 ####################################
 # Optimizing Texture for Performance
 ####################################
-resetprop -n ro.hwui.texture_cache_size 72
-resetprop -n ro.hwui.layer_cache_size 48
-resetprop -n ro.hwui.r_buffer_cache_size 8
-resetprop -n ro.hwui.path_cache_size 32
-resetprop -n ro.hwui.gradient_cache_size 1
-resetprop -n ro.hwui.drop_shadow_cache_size 6
-resetprop -n ro.hwui.texture_cache_flushrate 0.4
-resetprop -n ro.hwui.text_small_cache_width 1024
-resetprop -n ro.hwui.text_small_cache_height 1024
-resetprop -n ro.hwui.text_large_cache_width 2048
-resetprop -n ro.hwui.text_large_cache_height 2048
+# Apply a runtime HWUI profile once SurfaceFlinger is up so texture
+# rendering gets larger caches while the compositor is running.
+apply_hwui_performance() {
+    resetprop -n ro.hwui.texture_cache_size 128
+    resetprop -n ro.hwui.layer_cache_size 96
+    resetprop -n ro.hwui.r_buffer_cache_size 16
+    resetprop -n ro.hwui.path_cache_size 64
+    resetprop -n ro.hwui.gradient_cache_size 2
+    resetprop -n ro.hwui.drop_shadow_cache_size 12
+    resetprop -n ro.hwui.texture_cache_flushrate 0.2
+    resetprop -n ro.hwui.text_small_cache_width 2048
+    resetprop -n ro.hwui.text_small_cache_height 2048
+    resetprop -n ro.hwui.text_large_cache_width 4096
+    resetprop -n ro.hwui.text_large_cache_height 4096
+    echo "HWUI performance profile applied" >/dev/kmsg 2>/dev/null || true
+}
+
+# Wait for SurfaceFlinger, then apply the performance profile (non-blocking).
+(
+    for i in 1 2 3 4 5 6 7 8 9 10; do
+        sf=$(service list | grep -c "SurfaceFlinger:")
+        if [ "$sf" -ge 1 ]; then
+            apply_hwui_performance
+            break
+        fi
+        sleep 2
+    done
+) &
 ####################################
 # LMK
 ####################################
-resetprop -n ro.lmk.debug false
-resetprop -n ro.lmk.upgrade_pressure 40
-resetprop -n ro.lmk.downgrade_pressure 60
-resetprop -n ro.lmk.kill_heaviest_task false
-resetprop -n ro.lmk.psi_complete_stall_ms=500
-resetprop -n ro.lmk.psi_partial_stall_ms=70
-resetprop -n ro.lmk.thrashing_limit=100
-resetprop -n ro.lmk.thrashing_limit_decay=10
-resetprop -n ro.lmk.swap_util_max=100
-while :
-do
-    sf=$(service list | grep -c "SurfaceFlinger:")
-
-    if [ $sf -eq 1 ]
-    then
-        service call SurfaceFlinger 1008 i32 1
-        break
-    else
-        sleep 2
-    fi
+# If the new LMKD daemon is present, prefer it and skip legacy LMK props.
+# Otherwise apply the legacy `ro.lmk.*` tuning values.
+if pidof lmkd >/dev/null 2>&1; then
+    echo "LMKD detected; skipping legacy ro.lmk.* properties" >/dev/kmsg 2>/dev/null || true
+else
+    resetprop -n ro.lmk.debug false
+    resetprop -n ro.lmk.upgrade_pressure 40
+    resetprop -n ro.lmk.downgrade_pressure 60
+    resetprop -n ro.lmk.kill_heaviest_task false
+    resetprop -n ro.lmk.psi_complete_stall_ms=500
+    resetprop -n ro.lmk.psi_partial_stall_ms=70
+    resetprop -n ro.lmk.thrashing_limit=100
+    resetprop -n ro.lmk.thrashing_limit_decay=10
+    resetprop -n ro.lmk.swap_util_max=100
+fi
 done
