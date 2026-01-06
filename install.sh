@@ -8,7 +8,7 @@ LATESTARTSERVICE=true
 print_modname() {
   ui_print "      Welcome to Ghenna Tweaks  ʕ⁠·⁠ᴥ⁠·⁠ʔ     "
   sleep 1
-  ui_print "Codename           : Kohaku               "
+  ui_print "Codename           : Empyrea               "
   sleep 1
   ui_print "Created            : Hirauki"
   sleep 1
