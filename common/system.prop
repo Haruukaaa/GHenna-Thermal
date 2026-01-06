@@ -134,6 +134,7 @@ debug.graphics.game_default_frame_rate.disabled=1
 # Fast App Launch
 persist.device_config.runtime_native.usap_pool_enabled=true
 persist.zygote.preload_threads=3
+ro.zygote.disable_gl_preload=false
 ro.zygote.preload.enable=0
 ro.zygote.preload.disable=1
 
@@ -143,4 +144,4 @@ video.accelerate.hw=1
 
 # Disable Unnecessary 
 ro.hwui.disable_scissor_opt=false
-ro.zygote.disable_gl_preload=true
+ro.zygote.disable_gl_preload=1
