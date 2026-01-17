@@ -4,9 +4,9 @@ Set_value()
 {
     if [[ -f "$2" ]];
     then
-        chmod 0666 "$2"
+        chmod 0755 "$2"
         echo "$1" > "$2"
-        chmod 0444 "$2"
+        chmod 0755 "$2"
     fi
 }
 Fast_charge() {
