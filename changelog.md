@@ -1,5 +1,12 @@
 # CL - GHenna Tweaks
 
+## R5.0
+- New Codename to C
+- Enhance some fast charging lib
+- Rework again much string
+- Update with 2 version, Qualcomm only and universal version
+- Refine some kernel and thermal too
+
 ## R4.0
 - New Codename to Liv:Empyrea
 - Rework again about system prop
