@@ -8,7 +8,7 @@ LATESTARTSERVICE=true
 print_modname() {
   ui_print "      Welcome to Ghenna Tweaks  ʕ⁠·⁠ᴥ⁠·⁠ʔ     "
   sleep 1
-  ui_print "Codename           : C               "
+  ui_print "Codename           : Cyrene               "
   sleep 1
   ui_print "Created            : Hirauki"
   sleep 1
@@ -64,27 +64,17 @@ print_modname() {
 }
 
 on_install() {
-  # The following is the default implementation: extract $ZIPFILE/system to $MODPATH
-  # Extend/change the logic to whatever you want
-  ui_print "- Extracting module files"
-  
-  # Check if root
-  if [ "$(id -u)" != "0" ]; then
-    ui_print "! This script requires root access"
-    return 1
-  fi
-  
-  # Clean package cache
+  ui_print "- Clearing package cache"
   [[ -e "/data/system/package_cache" ]] && rm -rf /data/system/package_cache/*
   
-  # Extract files
+  ui_print "- Installing module files"
   unzip -o "$ZIPFILE" -x 'META-INF/*' -d "$MODPATH" >&2
   unzip -o "$ZIPFILE" 'system/*' -d "$MODPATH" >&2
   unzip -o "$ZIPFILE" 'service.sh' -d "$MODPATH" >&2
   unzip -o "$ZIPFILE" 'module.prop' -d "$MODPATH" >&2
   
   sleep 2
-
+  ui_print "- Installation completed successfully"
 }
 
 # Only some special files require specific permissions
