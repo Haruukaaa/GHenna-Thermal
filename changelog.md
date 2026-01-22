@@ -1,11 +1,12 @@
 # CL - GHenna Tweaks
 
 ## R5.0
-- New Codename to C
+- New Codename to Cyrene
 - Enhance some fast charging lib
 - Rework again much string
-- Update with 2 version, Qualcomm only and universal version
-- Refine some kernel and thermal too
+- Release with two version, Qualcomm only and Universal version
+- Rework system folder too
+- Refine some kernel too
 
 ## R4.0
 - New Codename to Liv:Empyrea
