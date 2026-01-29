@@ -8,7 +8,7 @@ LATESTARTSERVICE=true
 print_modname() {
   ui_print "      Welcome to Ghenna Tweaks  ʕ⁠·⁠ᴥ⁠·⁠ʔ     "
   sleep 1
-  ui_print "Codename           : Cyrene               "
+  ui_print "Codename           : Lynae               "
   sleep 1
   ui_print "Created            : Hirauki"
   sleep 1
@@ -85,8 +85,6 @@ set_permissions() {
   # The following is the default rule, DO NOT remove
   set_perm_recursive $MODPATH 0 0 0777 0755
   set_perm $MODPATH/service.sh 0 0 0777 0777
-  set_perm $MODPATH/system/bin/P0 0 0 0755 0777
-  set_perm $MODPATH/system/bin/P1 0 0 0755 0777
   set_perm $MODPATH/system/etc/.nth_fc/.fc_main.sh 0 0 0777
   set_perm $MODPATH/system/etc/.nth_fc/.fc_lib 0 0 0777
 
