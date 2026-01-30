@@ -85,8 +85,8 @@ set_permissions() {
   # The following is the default rule, DO NOT remove
   set_perm_recursive $MODPATH 0 0 0777 0755
   set_perm $MODPATH/service.sh 0 0 0777 0777
-  set_perm $MODPATH/system/etc/.nth_fc/.fc_main.sh 0 0 0777
-  set_perm $MODPATH/system/etc/.nth_fc/.fc_lib 0 0 0777
+  set_perm $MODPATH/system/etc/.nth_fc/.fc_main.sh 0 0 0755
+  set_perm $MODPATH/system/etc/.nth_fc/.fc_lib 0 0 0755
 
     # Here are some examples:
   # set_perm_recursive  $MODPATH/system/lib       0     0       0755      0644
