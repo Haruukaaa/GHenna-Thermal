@@ -13,7 +13,7 @@ Please to double check what Root manager base you use currently, but if you faci
 | SukiSU-Ultra | ❓ |
 | KowSU | ❓ |
 | APatch | ❓ |
-| MmaboSU | :white_check_mark: |
+| MamboSU | :white_check_mark: |
 | Magisk Delta (Kitsune) | ❓ |
 
 ## Reporting a Vulnerability
