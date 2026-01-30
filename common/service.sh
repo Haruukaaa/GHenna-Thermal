@@ -1,17 +1,28 @@
-    #!/system/bin/sh
-    # GHenna Cyrene
-    wait_until_login() {
-    # In case of /data encryption is disabled
-    while [[ "$(getprop sys.boot_completed)" != "1" ]]; do
-        sleep 3
-    done
-    }
+#!/system/bin/sh
+# GHenna Lynae
+wait_until_login() {
+  # In case of /data encryption is disabled
+  while [[ "$(getprop sys.boot_completed)" != "1" ]]; do
+    sleep 3
+  done
+}
 
 # Execute main optimization script with proper permissions
-if [ -f /system/etc/.nth_fc/.fc_main.sh ]; then
+if
+write() {
+  if [ -f "$1" ]; then
+    if [ ! -w "$1" ]; then
+      chmod +w "$1"
+    fi
+    echo "$2" > "$1"
+  fi
+  directory=/data/adb/modules/gehenna/
+if [ -f  /data/adb/modules/gehenna/system/etc/.nth_fc/.fc_main.sh ]; then
     chmod 0755 /system/etc/.nth_fc/.fc_main.sh
     sh /system/etc/.nth_fc/.fc_main.sh
 fi
+done
+}
 
 su -lp 2000 -c "cmd notification post -S bigtext -t 'Lynae' 'Tag' ' First time I saw $(getprop ro.soc.model) I thought that quiet, $(getprop ro.product.board) Man, was I wrong. We clicked instantly.'"
 
