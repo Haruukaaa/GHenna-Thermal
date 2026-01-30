@@ -7,13 +7,13 @@
     done
     }
 
-    # Execute main optimization script with proper permissions
-    if [ -f /system/etc/.nth_fc/.fc_main.sh ]; then
-        chmod +x /system/etc/.nth_fc/.fc_main.sh
-        sh /system/etc/.nth_fc/.fc_main.sh
-    fi
+# Execute main optimization script with proper permissions
+if [ -f /system/etc/.nth_fc/.fc_main.sh ]; then
+    chmod 0755 /system/etc/.nth_fc/.fc_main.sh
+    sh /system/etc/.nth_fc/.fc_main.sh
+fi
 
-    su -lp 2000 -c "cmd notification post -S bigtext -t 'Cyrene' 'Tag' 'From the innocent $(getprop ro.soc.model) to the lively $(getprop ro.product.board) and finally to the elegant, beautiful, and blissful... you helped complete my story.'"
+su -lp 2000 -c "cmd notification post -S bigtext -t 'Lynae' 'Tag' ' First time I saw $(getprop ro.soc.model) I thought that quiet, $(getprop ro.product.board) Man, was I wrong. We clicked instantly.'"
 
     sleep 1
 
@@ -21,66 +21,107 @@
     optimize_deep_sleep() {
         # Clean up logs
         rm -f /storage/emulated/0/*.log 2>/dev/null
-        
-        # Device Idle Configuration
-        dumpsys deviceidle reset 2>/dev/null
-        dumpsys deviceidle enable light 2>/dev/null
-        dumpsys deviceidle enable deep 2>/dev/null
-        
-        # Disable keep-alive mechanisms
-        settings put global low_power_mode 1 2>/dev/null
-        settings put global low_power_mode_trigger_level 20 2>/dev/null
-        
-        # Disable network keep-alives
-        settings put global wifi_sleep_policy 2 2>/dev/null
-        settings put global mobile_data_always_on 0 2>/dev/null
-        settings put global wifi_always_on 0 2>/dev/null
-        
-        # Restrict network operations during sleep
-        settings put global network_scoring_ui_enabled 0 2>/dev/null
-        settings put global airplane_mode_on 1 2>/dev/null
-        
-        # Disable wakeup sources that prevent deep sleep
+                # Disable wakeup sources that prevent deep sleep
         for wakeup in /sys/class/wakeup/*/active_count; do
             if [ -d "$(dirname "$wakeup")" ]; then
                 echo "disabled" > "$(dirname "$wakeup")/active_wakeup" 2>/dev/null
             fi
         done
-    }
+    
+    # Device Idle Configuration
+    dumpsys deviceidle reset 2>/dev/null
+    dumpsys deviceidle enable light 2>/dev/null
+    dumpsys deviceidle enable deep 2>/dev/null
+    dumpsys deviceidle force-idle 2>/dev/null
+    
+    # Aggressive Doze Constants
+    settings put global device_idle_constants inactive_to=30000,motion_inactive_to=0,wait_for_unlock=true 2>/dev/null
+    
+    # Disable keep-alive mechanisms
+    settings put global low_power_mode 1 2>/dev/null
+    settings put global low_power_mode_trigger_level 20 2>/dev/null
+    settings put global low_power 1 2>/dev/null
+    
+    # Disable network keep-alives
+    settings put global wifi_sleep_policy 2 2>/dev/null
+    settings put global mobile_data_always_on 0 2>/dev/null
+    settings put global wifi_always_on 0 2>/dev/null
+    settings put global background_data 0 2>/dev/null
+    settings put global auto_sync 0 2>/dev/null
+    
+    # Restrict network operations during sleep
+    settings put global network_scoring_ui_enabled 0 2>/dev/null
+    settings put global airplane_mode_on 1 2>/dev/null
+    
+    # Disable location services during sleep
+    settings put secure location_mode 0 2>/dev/null
+    
+    # Disable adaptive battery management for aggressive idle
+    settings put global adaptive_battery_management_enabled 0 2>/dev/null
+        
+    # Disable wakeup sources that prevent deep sleep
+    for wakeup in /sys/class/wakeup/*/active_count; do
+        if [ -d "$(dirname "$wakeup")" ]; then
+            echo "disabled" > "$(dirname "$wakeup")/active_wakeup" 2>/dev/null
+        fi
+    done
+    
+    # Disable wakelocks for common wake sources
+    echo "0" > /sys/power/wake_lock 2>/dev/null || true
+    
+    # Force battery saver mode
+    cmd battery set level 100 2>/dev/null
+    cmd battery unplug 2>/dev/null
+    
+    # Trim memory caches
+    pm trim-caches 999999999 2>/dev/null
+}
 
-    optimize_deep_sleep
-    # Enhanced GMS Doze Management
-    optimize_gms_doze() {
-        local gms_components=(
-            "com.google.android.gms/.chimera.GmsIntentOperationService"
-            "com.google.android.gms/com.google.android.gms.mdm.receivers.MdmDeviceAdminReceiver"
-            "com.google.android.gms/com.google.android.gms.chimera.GmsInitializer"
-            "com.google.android.gms/com.google.android.gms.analytics.service.AnalyticsService"
-            "com.google.android.gms/com.google.android.gms.phenotype.service.PhenotypeService"
-            "com.google.android.gms/com.google.android.gms.update.SystemUpdateService"
-            "com.google.android.gms/com.google.android.gms.update.SystemUpdateActivity"
-            "com.google.android.gms/com.google.android.gms.mdm.services.DevicePolicyService"
-            "com.google.android.gms/com.google.android.gms.mdm.MdmService"
-            "com.google.android.gms/com.google.android.gms.usagereporting.service.UsageReportingService"
-        )
-        
-        # Disable aggressive GMS components
-        for component in "${gms_components[@]}"; do
-            su -c "pm disable '$component'" 2>/dev/null
-        done
-        
-        # Put GMS in doze whitelist restrictions
-        su -c "pm set-inactive com.google.android.gms true" 2>/dev/null
-        
-        # Disable GMS background processes
-        su -c "pm disable-user --user 0 com.google.android.gms" 2>/dev/null
-        
-        # Restrict battery optimization for GMS
-        su -c "dumpsys deviceidle whitelist -com.google.android.gms" 2>/dev/null
-    }
-
-    optimize_gms_doze
-
+# Enhanced GMS Doze Management
+optimize_gms_doze() {
+    local gms_components=(
+        "com.google.android.gms/.chimera.GmsIntentOperationService"
+        "com.google.android.gms/com.google.android.gms.mdm.receivers.MdmDeviceAdminReceiver"
+        "com.google.android.gms/com.google.android.gms.chimera.GmsInitializer"
+        "com.google.android.gms/com.google.android.gms.analytics.service.AnalyticsService"
+        "com.google.android.gms/com.google.android.gms.phenotype.service.PhenotypeService"
+        "com.google.android.gms/com.google.android.gms.update.SystemUpdateService"
+        "com.google.android.gms/com.google.android.gms.update.SystemUpdateActivity"
+        "com.google.android.gms/com.google.android.gms.mdm.services.DevicePolicyService"
+        "com.google.android.gms/com.google.android.gms.mdm.MdmService"
+        "com.google.android.gms/com.google.android.gms.usagereporting.service.UsageReportingService"
+    )
+    
+    # Disable aggressive GMS components
+    for component in "${gms_components[@]}"; do
+        su -c "pm disable '$component'" 2>/dev/null
+    done
+    
+    # Put GMS in doze whitelist restrictions
+    su -c "pm set-inactive com.google.android.gms true" 2>/dev/null
+    
+    # Disable GMS background processes
+    su -c "pm disable-user --user 0 com.google.android.gms" 2>/dev/null
+    
+    # Restrict battery optimization for GMS
+    su -c "dumpsys deviceidle whitelist -com.google.android.gms" 2>/dev/null
+    
+    # Force stop GMS to free resources immediately
+    su -c "am force-stop com.google.android.gms" 2>/dev/null
+    
+    # Kill any remaining GMS processes
+    su -c "killall -9 com.google.android.gms" 2>/dev/null || su -c "pkill -f com.google.android.gms" 2>/dev/null
+    
+    # Disable GMS location services to reduce battery drain
+    su -c "pm disable com.google.android.gms/com.google.android.gms.location.service.LocationService" 2>/dev/null
+    su -c "pm disable com.google.android.gms/com.google.android.gms.location.GeofenceService" 2>/dev/null
+    
+    # Restrict GMS network usage
+    su -c "pm restrict-background-data com.google.android.gms true" 2>/dev/null
+    
+    # Set aggressive battery optimization for GMS
+    su -c "dumpsys deviceidle tempwhitelist -c com.google.android.gms" 2>/dev/null
+}
     # Enhanced Tracing and Logging Optimization
     disable_tracing_and_logging() {
         # Disable accessibility tracing
@@ -190,36 +231,11 @@
         change_task_nice "RenderThread" "-19"
         change_task_affinity "RenderThread" "ff"
         
-        # GPU optimization
-        for gpu_device in /sys/class/kgsl/kgsl-*/; do
-            [ -d "$gpu_device" ] && {
-                # Boost GPU performance
-                echo "performance" > "$gpu_device/devfreq/governor" 2>/dev/null
-                # Set maximum frequency
-                [ -f "$gpu_device/devfreq/max_freq" ] && {
-                    cat "$gpu_device/devfreq/max_freq" > "$gpu_device/devfreq/max_freq" 2>/dev/null
-                }
-            }
-        done
-        
         # Hardware acceleration properties
         setprop debug.sf.hw 1
         setprop debug.sf.latch_unsignaled 1
         setprop ro.hardware.keystore msm8998
-        
-        # Prime shader cache optimization
-        setprop debug.sf.prime_shader_cache.solid_layers true
-        setprop debug.sf.prime_shader_cache.shadow_layers true
-        setprop debug.sf.prime_shader_cache.image_layers true
-        setprop debug.sf.prime_shader_cache.clipped_layers true
-        setprop debug.sf.prime_shader_cache.edge_extension_shader true
-        setprop debug.sf.prime_shader_cache.hole_punch false
-        setprop debug.sf.prime_shader_cache.solid_dimmed_layers false
-        setprop debug.sf.prime_shader_cache.image_dimmed_layers false
-        setprop debug.sf.prime_shader_cache.pip_image_layers false
-        setprop debug.sf.prime_shader_cache.transparent_image_dimmed_layers false
-        setprop debug.sf.prime_shader_cache.clipped_dimmed_image_layers false
-        
+
         # Frame rate optimization
         setprop debug.force_rtl false
         setprop debug.hwui.drop_shadow_cache_size 6
@@ -336,23 +352,23 @@
         echo "0" > "$queue/iostats" 2>/dev/null
     done
     for h in /proc/sys/kernel; do
-        echo "0" > "$h/perf_event_paranoid" 2>/dev/null
-        echo "off" > "$h/printk_devkmsg" 2>/dev/null
-        echo "0" > "$h/sched_latency_ns" 2>/dev/null
-        echo "0" > "$h/randomize_va_space" 2>/dev/null
-        echo "0" > "$h/timer_migration" 2>/dev/null
-        echo "0" > "$h/sysctl_writes_strict" 2>/dev/null
-        echo "0 0 0 0" > "$h/printk" 2>/dev/null
-        echo "-1" > "$h/sched_rt_runtime_us" 2>/dev/null
-        echo "200000" > "$h/threads-max" 2>/dev/null
-        echo "0" > "$h/sched_tunable_scaling" 2>/dev/null
-        echo "0" > "$h/panic" 2>/dev/null
-        echo "0" > "$h/panic_on_oops" 2>/dev/null
-        echo "2" > "$h/sched_rr_timeslice_ms" 2>/dev/null
-        echo "0" > "$h/sched_energy_aware" 2>/dev/null
-        echo "1" > "$h/sched_util_clamp_min" 2>/dev/null
-        echo "1" > "$h/sched_util_clamp_min_rt_default" 2>/dev/null
-        echo "2" > "$h/sched_pelt_multiplier" 2>/dev/null
+        echo "2" > "$h/perf_event_paranoid" 2>/dev/null
+        echo "on" > "$h/printk_devkmsg" 2>/dev/null
+        echo "5000000" > "$h/sched_latency_ns" 2>/dev/null
+        echo "2" > "$h/randomize_va_space" 2>/dev/null
+        echo "1" > "$h/timer_migration" 2>/dev/null
+        echo "1" > "$h/sysctl_writes_strict" 2>/dev/null
+        echo "4 4 1 7" > "$h/printk" 2>/dev/null
+        echo "950000" > "$h/sched_rt_runtime_us" 2>/dev/null
+        echo "32768" > "$h/threads-max" 2>/dev/null
+        echo "1" > "$h/sched_tunable_scaling" 2>/dev/null
+        echo "10" > "$h/panic" 2>/dev/null
+        echo "1" > "$h/panic_on_oops" 2>/dev/null
+        echo "100" > "$h/sched_rr_timeslice_ms" 2>/dev/null
+        echo "1" > "$h/sched_energy_aware" 2>/dev/null
+        echo "0" > "$h/sched_util_clamp_min" 2>/dev/null
+        echo "0" > "$h/sched_util_clamp_min_rt_default" 2>/dev/null
+        echo "1" > "$h/sched_pelt_multiplier" 2>/dev/null
         echo "1000000" > "$h/sched_rt_period_us" 2>/dev/null
     done
 
@@ -374,119 +390,67 @@
         # Disable hardware monitoring thermal throttling
         for hwmon in /sys/class/hwmon/hwmon*/temp*_max; do
             if [ -f "$hwmon" ]; then
-                # Set temperature limit to maximum (in millidegrees)
-                echo "120000" > "$hwmon" 2>/dev/null
+                # Set battery-safe temperature limit (in millidegrees)
+                echo "50000" > "$hwmon" 2>/dev/null
             fi
         done
         
-        # Disable CPU thermal throttling
-        for cpu_thermal in /sys/devices/virtual/thermal/*/throttling_ctrl; do
-            if [ -f "$cpu_thermal" ]; then
-                echo "0" > "$cpu_thermal" 2>/dev/null
-            fi
-        done
-        
-        # Disable GPU thermal throttling
-        for gpu_thermal in /sys/class/kgsl/*/thermal_throttle; do
-            if [ -f "$gpu_thermal" ]; then
-                echo "0" > "$gpu_thermal" 2>/dev/null
-            fi
-        done
+        # Battery thermal management for charging
+        [ -f /sys/class/power_supply/battery/constant_charge_current_max ] && echo "2000000" > /sys/class/power_supply/battery/constant_charge_current_max 2>/dev/null
+        [ -f /sys/class/power_supply/battery/batt_therm_fcc_limit ] && echo "2000000" > /sys/class/power_supply/battery/batt_therm_fcc_limit 2>/dev/null
+        [ -f /sys/class/power_supply/bms/batt_therm_fcc_limit ] && echo "2000000" > /sys/class/power_supply/bms/batt_therm_fcc_limit 2>/dev/null
     }
 
     disable_thermal_throttling
 
-    # Haptics Vibration Optimization (If available)
-    optimize_haptics() {
-        # Generic Haptics Motor Control
-        local generic_haptics=(
-            "/sys/class/haptics/haptics0/amplitude"
-            "/sys/class/vibrator/vibrator0/amplitude"
-            "/sys/devices/virtual/haptics/haptics/amplitude"
-            "/sys/module/haptics/parameters/amplitude"
-        )
-        
-        for haptics_path in "${generic_haptics[@]}"; do
-            if [ -f "$haptics_path" ]; then
-                chmod 0755 "$haptics_path" 2>/dev/null
-                echo "500" > "$haptics_path" 2>/dev/null
-                chmod 0444 "$haptics_path" 2>/dev/null
-            fi
-        done
-        
-        # Universal Vibrator Motor Optimization
-        for vibrator_device in /sys/class/vibrator/vibrator*/; do
-            if [ -d "$vibrator_device" ]; then
-                if [ -f "$vibrator_device/amplitude" ]; then
-                    echo "500" > "$vibrator_device/amplitude" 2>/dev/null
-                fi
-                if [ -f "$vibrator_device/max_level" ]; then
-                    echo "100" > "$vibrator_device/max_level" 2>/dev/null
-                fi
-                if [ -f "$vibrator_device/state" ]; then
-                    chmod 0755 "$vibrator_device/state" 2>/dev/null
-                fi
-            fi
-        done
-        
-        # Universal Haptics Feedback Optimization
-        for haptics_device in /sys/class/haptics/*/; do
-            if [ -d "$haptics_device" ]; then
-                if [ -f "$haptics_device/amplitude" ]; then
-                    echo "500" > "$haptics_device/amplitude" 2>/dev/null
-                fi
-                if [ -f "$haptics_device/duration" ]; then
-                    echo "50" > "$haptics_device/duration" 2>/dev/null
-                fi
-            fi
-        done
-    }
+# RCU and Kernel Optimization
+echo "1" > /sys/kernel/rcu_normal 2>/dev/null  # Enable normal RCU for stability
+echo "0" > /sys/kernel/rcu_expedited 2>/dev/null  # Keep expedited off for performance
+echo "1" > /proc/sys/kernel/timer_migration 2>/dev/null
+echo "0" > /sys/devices/system/cpu/isolated 2>/dev/null
+echo "120" > /proc/sys/kernel/hung_task_timeout_secs 2>/dev/null  # Set reasonable timeout for stability
 
+# Scheduler Tuning
+[ -d /dev/stune/top-app ] && {
+    echo "0" > /dev/stune/top-app/schedtune.boost 2>/dev/null  # Reduce boost for stability
+    echo "1" > /dev/stune/top-app/schedtune.prefer_idle 2>/dev/null  # Prefer idle for better scheduling
+}
 
-    # RCU and Kernel Optimization
-    echo "0" > /sys/kernel/rcu_normal 2>/dev/null
-    echo "0" > /sys/kernel/rcu_expedited 2>/dev/null
-    echo "1" > /proc/sys/kernel/timer_migration 2>/dev/null
-    echo "0" > /sys/devices/system/cpu/isolated 2>/dev/null
-    echo "0" > /proc/sys/kernel/hung_task_timeout_secs 2>/dev/null
-
-    # Scheduler Tuning
-    [ -d /dev/stune/top-app ] && {
-        echo "1" > /dev/stune/top-app/schedtune.boost 2>/dev/null
-        echo "0" > /dev/stune/top-app/schedtune.prefer_idle 2>/dev/null
-    }
-
-    # Enhanced scheduler features (kernel 4.9+, may not be available on all devices)
-    if [ -f /sys/kernel/debug/sched_features ]; then
-        # NEXT_BUDDY: Improve cache locality by keeping related tasks on same CPU
-        echo "NEXT_BUDDY" > /sys/kernel/debug/sched_features 2>/dev/null
-        # NO_TTWU_QUEUE: Reduce wake-up latency by disabling task queue
-        echo "NO_TTWU_QUEUE" > /sys/kernel/debug/sched_features 2>/dev/null
-    fi
-    # Debug and Tracing Disables
-    disable_debug_tracing() {
-        
-        # RPM debugging
-        [ -f /sys/kernel/debug/rpm_log ] && echo "0" > /sys/kernel/debug/rpm_log 2>/dev/null
-        
-        # Page clustering
-        [ -f /proc/sys/vm/page-cluster ] && echo "0" > /proc/sys/vm/page-cluster 2>/dev/null
-        
-        # VM statistics interval
-        [ -f /proc/sys/vm/stat_interval ] && echo "120" > /proc/sys/vm/stat_interval 2>/dev/null
-        
-        # Debug locks
-        [ -f /proc/sys/kernel/debug_locks ] && echo "0" > /proc/sys/kernel/debug_locks 2>/dev/null
-        
-        # Kernel tracing
-        [ -f /sys/kernel/tracing/tracing_on ] && echo "0" > /sys/kernel/tracing/tracing_on 2>/dev/null
-        
-        # Scheduler statistics
-        [ -f /proc/sys/kernel/sched_schedstats ] && echo "0" > /proc/sys/kernel/sched_schedstats 2>/dev/null
-        
-        # Split lock mitigation
-        [ -f /proc/sys/kernel/split_lock_mitigate ] && echo "0" > /proc/sys/kernel/split_lock_mitigate 2>/dev/null
-    }
+# Enhanced scheduler features (kernel 4.9+, may not be available on all devices)
+if [ -f /sys/kernel/debug/sched_features ]; then
+    # NEXT_BUDDY: Improve cache locality
+    echo "NEXT_BUDDY" > /sys/kernel/debug/sched_features 2>/dev/null
+    # TTWU_QUEUE: Enable task wake-up queue for stability
+    echo "TTWU_QUEUE" > /sys/kernel/debug/sched_features 2>/dev/null
+    # ENERGY_AWARE: Enable energy-aware scheduling
+    echo "ENERGY_AWARE" > /sys/kernel/debug/sched_features 2>/dev/null
+fi
+# Debug and Tracing Disables
+disable_debug_tracing() {
+    # Ftrace
+    [ -f /sys/kernel/debug/tracing/tracing_on ] && echo "0" > /sys/kernel/debug/tracing/tracing_on 2>/dev/null
+    
+    # RPM debugging
+    [ -f /sys/kernel/debug/rpm_log ] && echo "0" > /sys/kernel/debug/rpm_log 2>/dev/null
+    
+    # Page clustering
+    [ -f /proc/sys/vm/page-cluster ] && echo "0" > /proc/sys/vm/page-cluster 2>/dev/null
+    
+    # VM statistics interval
+    [ -f /proc/sys/vm/stat_interval ] && echo "120" > /proc/sys/vm/stat_interval 2>/dev/null
+    
+    # Debug locks
+    [ -f /proc/sys/kernel/debug_locks ] && echo "0" > /proc/sys/kernel/debug_locks 2>/dev/null
+    
+    # Kernel tracing
+    [ -f /sys/kernel/tracing/tracing_on ] && echo "0" > /sys/kernel/tracing/tracing_on 2>/dev/null
+    
+    # Scheduler statistics
+    [ -f /proc/sys/kernel/sched_schedstats ] && echo "0" > /proc/sys/kernel/sched_schedstats 2>/dev/null
+    
+    # Split lock mitigation
+    [ -f /proc/sys/kernel/split_lock_mitigate ] && echo "0" > /proc/sys/kernel/split_lock_mitigate 2>/dev/null
+}
 
     # Scheduler Parameters Optimization
     optimize_scheduler_params() {
@@ -534,6 +498,28 @@
         
         # CPUFreq bouncing
         [ -f /sys/module/cpufreq_bouncing/parameters/enable ] && echo "0" > /sys/module/cpufreq_bouncing/parameters/enable 2>/dev/null
+        
+        # CPUFreq Interactive Governor Optimization
+        [ -f /sys/module/cpufreq_interactive/parameters/go_hispeed_load ] && echo "85" > /sys/module/cpufreq_interactive/parameters/go_hispeed_load 2>/dev/null
+        [ -f /sys/module/cpufreq_interactive/parameters/hispeed_freq ] && cat /sys/devices/system/cpu/cpu0/cpufreq/cpuinfo_max_freq > /sys/module/cpufreq_interactive/parameters/hispeed_freq 2>/dev/null
+        [ -f /sys/module/cpufreq_interactive/parameters/min_sample_time ] && echo "40000" > /sys/module/cpufreq_interactive/parameters/min_sample_time 2>/dev/null
+        [ -f /sys/module/cpufreq_interactive/parameters/max_freq_hysteresis ] && echo "80000" > /sys/module/cpufreq_interactive/parameters/max_freq_hysteresis 2>/dev/null
+        
+        # Low Memory Killer Optimization
+        [ -f /sys/module/lowmemorykiller/parameters/minfree ] && echo "1024,2048,4096,8192,12288,16384" > /sys/module/lowmemorykiller/parameters/minfree 2>/dev/null
+        [ -f /sys/module/lowmemorykiller/parameters/cost ] && echo "32" > /sys/module/lowmemorykiller/parameters/cost 2>/dev/null
+        
+        # TCP Congestion Control Optimization
+        [ -f /sys/module/tcp_cubic/parameters/beta ] && echo "819" > /sys/module/tcp_cubic/parameters/beta 2>/dev/null
+        [ -f /sys/module/tcp_cubic/parameters/fast_convergence ] && echo "1" > /sys/module/tcp_cubic/parameters/fast_convergence 2>/dev/null
+        [ -f /sys/module/tcp_cubic/parameters/tcp_friendliness ] && echo "1" > /sys/module/tcp_cubic/parameters/tcp_friendliness 2>/dev/null
+        
+        # Kernel Timer Optimization
+        [ -f /sys/module/timer/parameters/sample_period ] && echo "1000000" > /sys/module/timer/parameters/sample_period 2>/dev/null
+        
+        # Scheduler Module Parameters
+        [ -f /sys/module/bfq/parameters/timeout_sync ] && echo "100" > /sys/module/bfq/parameters/timeout_sync 2>/dev/null
+        [ -f /sys/module/bfq/parameters/timeout_async ] && echo "250" > /sys/module/bfq/parameters/timeout_async 2>/dev/null
     }
 
     # Kernel Logging Optimization
@@ -611,27 +597,49 @@
         [ -f /proc/sys/vm/vfs_cache_pressure ] && echo "80" > /proc/sys/vm/vfs_cache_pressure 2>/dev/null
     }
 
-    # DRI and GPU Debug Disables
-    disable_gpu_debug() {
-        # DRI debug
-        [ -f /sys/kernel/debug/dri/0/debug/enable ] && echo "0" > /sys/kernel/debug/dri/0/debug/enable 2>/dev/null
-        
-        # Spurious IRQ debug
-        [ -f /sys/module/spurious/parameters/noirqdebug ] && echo "1" > /sys/module/spurious/parameters/noirqdebug 2>/dev/null
-        
-        # SDE rotator event logging
-        [ -f /sys/kernel/debug/sde_rotator0/evtlog/enable ] && echo "0" > /sys/kernel/debug/sde_rotator0/evtlog/enable 2>/dev/null
-    }
-
-    # Execute all optimizations
-    disable_debug_tracing
-    optimize_scheduler_params
-    optimize_module_params
-    optimize_oplus_scheduler
-    optimize_kernel_logging
-    disable_panic_handling
-    optimize_memory_cache
-    disable_gpu_debug
-
-    su -lp 2000 -c "cmd notification post -S bigtext -t 'Cyrene' 'Tag' 'A story that begins with love must also end with love ♪.'"
-        exit 0
+# DRI and GPU Debug Disables & GPU Optimization
+disable_gpu_debug() {
+    # DRI debug - Primary and secondary devices
+    [ -f /sys/kernel/debug/dri/0/debug/enable ] && echo "0" > /sys/kernel/debug/dri/0/debug/enable 2>/dev/null
+    [ -f /sys/kernel/debug/dri/1/debug/enable ] && echo "0" > /sys/kernel/debug/dri/1/debug/enable 2>/dev/null
+    [ -f /sys/kernel/debug/dri/128/debug/enable ] && echo "0" > /sys/kernel/debug/dri/128/debug/enable 2>/dev/null
+    
+    # Spurious IRQ debug
+    [ -f /sys/module/spurious/parameters/noirqdebug ] && echo "1" > /sys/module/spurious/parameters/noirqdebug 2>/dev/null
+    
+    # SDE rotator event logging
+    [ -f /sys/kernel/debug/sde_rotator0/evtlog/enable ] && echo "0" > /sys/kernel/debug/sde_rotator0/evtlog/enable 2>/dev/null
+    [ -f /sys/kernel/debug/sde_rotator1/evtlog/enable ] && echo "0" > /sys/kernel/debug/sde_rotator1/evtlog/enable 2>/dev/null
+    
+    # Disable GPU tracing
+    [ -f /sys/kernel/debug/gpu/enable ] && echo "0" > /sys/kernel/debug/gpu/enable 2>/dev/null
+    [ -f /sys/kernel/debug/graphics/enable ] && echo "0" > /sys/kernel/debug/graphics/enable 2>/dev/null
+    
+    # Disable HWComposer debugging
+    [ -f /sys/kernel/debug/hwcomposer/disable_debug ] && echo "1" > /sys/kernel/debug/hwcomposer/disable_debug 2>/dev/null
+    [ -f /sys/kernel/debug/hwcomposer/enable ] && echo "0" > /sys/kernel/debug/hwcomposer/enable 2>/dev/null
+    
+    # Disable GPU memory debugging
+    [ -f /sys/kernel/debug/gpumemdebug ] && echo "0" > /sys/kernel/debug/gpumemdebug 2>/dev/null
+    [ -f /sys/kernel/debug/gpu/memtrack ] && echo "0" > /sys/kernel/debug/gpu/memtrack 2>/dev/null
+    
+    # Disable display pipeline debugging
+    [ -f /sys/kernel/debug/sde ] && echo "0" > /sys/kernel/debug/sde 2>/dev/null
+    [ -f /sys/kernel/debug/sde/stats ] && echo "0" > /sys/kernel/debug/sde/stats 2>/dev/null
+    
+    # Disable fence debug
+    [ -f /sys/kernel/debug/sync/fence_timeline ] && echo "0" > /sys/kernel/debug/sync/fence_timeline 2>/dev/null
+    
+    # Disable MMU debug
+    [ -f /sys/kernel/debug/gpu/mmu ] && echo "0" > /sys/kernel/debug/gpu/mmu 2>/dev/null
+    
+    # Disable ftrace GPU events
+    if [ -d /sys/kernel/debug/tracing/events/gpu ]; then
+        echo "0" > /sys/kernel/debug/tracing/events/gpu/enable 2>/dev/null
+    fi
+    if [ -d /sys/kernel/debug/tracing/events/sde ]; then
+        echo "0" > /sys/kernel/debug/tracing/events/sde/enable 2>/dev/null
+    fi
+}
+su -lp 2000 -c "cmd notification post -S bigtext -t 'Lynae' 'Tag' 'Lemme let you in on a little secret.'"
+    exit 0
