@@ -1,7 +1,7 @@
 <!--
 -->
 ## GHenna-Tweaks
-[![Typing SVG](https://readme-typing-svg.herokuapp.com?font=Fira+Code&pause=1000&color=FFFFFF&width=435&lines=Want+feels+better?;Well;Try+by+yourself!)](https://git.io/typing-svg)
+[![Typing SVG](https://readme-typing-svg.herokuapp.com?font=Fira+Code&pause=10&color=FFFFFF&width=435&lines=Want+feels+better?;Well;Try+by+yourself!)](https://git.io/typing-svg)
 
 <img width="2569" height="1446" alt="448285442-c5446b58-bf26-4f89-90be-7828d1db7280" src="https://github.com/user-attachments/assets/702b75ee-971a-46ee-8819-628aa2a82994" />
 
