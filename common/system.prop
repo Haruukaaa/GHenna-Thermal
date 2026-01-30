@@ -7,8 +7,8 @@ ro.vendor.dfps.enable=false
 # GPU Turbo Boost system properties
 debug.gpu.renderscript.load_store_texture=1
 debug.enabletr=true
-debug.gr.numframebuffers=5
-debug.egl.buffcount=5
+debug.gr.numframebuffers=8
+debug.egl.buffcount=8
 debug.hwui.level=0
 debug.overlayui.enable=1
 debug.performance.tuning=1
@@ -18,11 +18,16 @@ persist.service.gfx.gpu_rendering_priority=1
 ro.config.enable.hw_accel=true
 ro.fb.mode=1
 video.accelerate.hw=1
+ro.hwui.drop_shadow_cache_size=8
+ro.hwui.gradient_cache_size=1
+ro.hwui.layer_cache_size=48
 
 # HWUI
-debug.hwui.app_memory_policy=aggresive
+debug.hwui.app_memory_policy=aggressive
 debug.hwui.optimized_texture_upload=true
 debug.hwui.use_gpu_pixel_buffers=1
+debug.hwui.overdraw.show=false
+ro.hwui.expensive_rendering_threshold=9000
 
 # Reduce Texture
 ro.hwui.texture_cache_flushrate=0.4
@@ -57,13 +62,13 @@ profiler.debugmonitor=0
 profiler.launch=0
 profiler.hung.dumpdobugreport=0
 ro.sys.fw.bservice_enable=true
-ro.sys.fw.bservice_limit=128
-ro.sys.fw.bservice_age=10000
-ro.sys.fw.bg_apps_limit=256
+ro.sys.fw.bservice_limit=256
+ro.sys.fw.bservice_age=15000
+ro.sys.fw.bg_apps_limit=512
 ro.vendor.qti.sys.fw.bservice_enable=true
-ro.vendor.qti.sys.fw.bservice_limit=128
-ro.vendor.qti.sys.fw.bservice_age=10000
-ro.vendor.qti.sys.fw.bg_apps_limit=256
+ro.vendor.qti.sys.fw.bservice_limit=256
+ro.vendor.qti.sys.fw.bservice_age=15000
+ro.vendor.qti.sys.fw.bg_apps_limit=512
 debug.systemui.latency_tracking=false
 debug.trace_resource_preload=false
 debug.track_amkill=false
@@ -125,23 +130,40 @@ debug.stagefright.renderengine.backend=threaded
 renderthread.skia.reduceopstasksplitting=true
 
 #Improve sliding response
-windowsmgr.max_events_per_sec=90
-view.scroll_friction=0
-ro.min_pointer_dur=8
+windowsmgr.max_events_per_sec=120
+view.scroll_friction=0.008
+ro.min_pointer_dur=6
 touch.deviceType=touchScreen
 debug.graphics.game_default_frame_rate.disabled=1
+ro.max.fling_velocity=20000
+ro.min.fling_velocity=0
 
 # Fast App Launch
 persist.device_config.runtime_native.usap_pool_enabled=true
-persist.zygote.preload_threads=3
+persist.zygote.preload_threads=4
 ro.zygote.disable_gl_preload=false
-ro.zygote.preload.enable=0
-ro.zygote.preload.disable=1
+ro.zygote.preload.enable=1
+ro.zygote.preload.disable=0
+ro.zygote.use_large_pages=true
 
 #Improve global touch screen response
 debug.egl.hw=1
 video.accelerate.hw=1
 
+# Thermal & Battery Optimization
+ro.thermal.default=1
+persist.sys.thermal.enable=true
+dalvik.vm.usejit=true
+dalvik.vm.usejitprofiles=true
+dalvik.vm.image-dex2oat-filter=speed
+dalvik.vm.dex2oat-filter=speed
+
+# Network Optimization
+net.dns1=8.8.8.8
+net.dns2=8.8.4.4
+persist.sys.net.dns1=8.8.8.8
+persist.sys.net.dns2=8.8.4.4
+
 # Disable Unnecessary 
 ro.hwui.disable_scissor_opt=false
-ro.zygote.disable_gl_preload=1
+ro.zygote.disable_gl_preload=0
