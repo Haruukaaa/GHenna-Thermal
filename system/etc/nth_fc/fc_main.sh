@@ -18,10 +18,17 @@ Fast_charge() {
     local paths
     
     paths=$(find /sys/class/power_supply -name "$param" 2>/dev/null)
-    # For other SOCs except Qualcomm, add additional search paths
+    # For other SOCs except Qualcomm, add additional search paths (If you using other soc like mediatek, etc)
     if [ "$SOC" != "Qualcomm" ]; then
         paths="$paths $(find /sys/devices -name "$param" 2>/dev/null)"
     fi
+
+        # Qualcomm-only additional search locations (If you using Qualcomm, use this path)
+    if echo "$SOC" | tr '[:upper:]' '[:lower:]' | grep -q "qualcomm" 2>/dev/null; then
+        paths="$paths $(find /sys/class/qcom-battery -name "$param" 2>/dev/null)"
+        paths="$paths $(find /sys/devices -name "$param" 2>/dev/null | grep -i qcom 2>/dev/null || true)"
+    fi
+
     for path in $paths; do
         if [ -f "$path" ]; then
             Set_value "$FC" "$path"
