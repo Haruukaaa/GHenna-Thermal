@@ -436,31 +436,40 @@ if [ -f /sys/kernel/debug/sched_features ]; then
     # ENERGY_AWARE: Enable energy-aware scheduling
     echo "ENERGY_AWARE" > /sys/kernel/debug/sched_features 2>/dev/null
 fi
-# Debug and Tracing Disables
-disable_debug_tracing() {
-    # Ftrace
-    [ -f /sys/kernel/debug/tracing/tracing_on ] && echo "0" > /sys/kernel/debug/tracing/tracing_on 2>/dev/null
-    
-    # RPM debugging
-    [ -f /sys/kernel/debug/rpm_log ] && echo "0" > /sys/kernel/debug/rpm_log 2>/dev/null
-    
-    # Page clustering
-    [ -f /proc/sys/vm/page-cluster ] && echo "0" > /proc/sys/vm/page-cluster 2>/dev/null
-    
-    # VM statistics interval
-    [ -f /proc/sys/vm/stat_interval ] && echo "120" > /proc/sys/vm/stat_interval 2>/dev/null
-    
-    # Debug locks
-    [ -f /proc/sys/kernel/debug_locks ] && echo "0" > /proc/sys/kernel/debug_locks 2>/dev/null
-    
-    # Kernel tracing
-    [ -f /sys/kernel/tracing/tracing_on ] && echo "0" > /sys/kernel/tracing/tracing_on 2>/dev/null
-    
-    # Scheduler statistics
-    [ -f /proc/sys/kernel/sched_schedstats ] && echo "0" > /proc/sys/kernel/sched_schedstats 2>/dev/null
-    
-    # Split lock mitigation
-    [ -f /proc/sys/kernel/split_lock_mitigate ] && echo "0" > /proc/sys/kernel/split_lock_mitigate 2>/dev/null
+# Panic Control
+disable_panic_handling() {
+    # Helper to safely write a value if the file exists
+    write_safe() {
+        local path="$1"; local val="$2"
+        if [ -e "$path" ]; then
+            if [ ! -w "$path" ]; then
+                chmod 0644 "$path" 2>/dev/null || true
+            fi
+            echo "$val" > "$path" 2>/dev/null || true
+        fi
+    }
+
+    # Explicit common panic knobs
+    write_safe /proc/sys/kernel/panic 0
+    write_safe /proc/sys/kernel/panic_on_oops 0
+    write_safe /proc/sys/kernel/panic_on_warn 0
+    write_safe /proc/sys/kernel/panic_on_rcu_stall 0
+    write_safe /sys/module/kernel/parameters/panic 0
+    write_safe /sys/module/kernel/parameters/panic_on_warn 0
+    write_safe /sys/module/kernel/parameters/pause_on_oops 0
+    write_safe /sys/module/kernel/panic_on_rcu_stall 0
+
+    # Pattern-based disables: any kernel/module parameter containing "panic" or "pause_on_oops"
+    for f in /proc/sys/kernel/*panic* /sys/module/*/parameters/*panic* /sys/module/*/parameters/*pause_on_oops*; do
+        if [ -f "$f" ]; then
+            echo "0" > "$f" 2>/dev/null || true
+        fi
+    done
+
+    # Best-effort: disable soft/hard watchdog/lockup panic knobs if present
+    for f in "/proc/sys/kernel/soft_watchdog" "/proc/sys/kernel/soft_lockup_panic" "/proc/sys/kernel/hard_lockup_panic"; do
+        [ -f "$f" ] && echo "0" > "$f" 2>/dev/null || true
+    done
 }
 
     # Scheduler Parameters Optimization
