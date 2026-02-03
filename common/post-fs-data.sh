@@ -16,11 +16,6 @@ safe_sys_write() {
     [ -w "$1" ] && echo "$2" > "$1" 2>/dev/null || true
 }
 
-# Disable I/O debugging for common block devices
-for dev in sda loop0 loop1 loop2 loop3 loop4 loop5 loop6 loop7 dm-0 mmcblk0 mmcblk1 mmcblk0rpmb; do
-    safe_sys_write "/sys/block/${dev}/queue/iostats" "0"
-done
-
 # Helper: resetprop quietly
 safe_resetprop() {
     resetprop -n "$1" "$2" 2>/dev/null || true
