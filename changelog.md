@@ -1,5 +1,11 @@
 # CL - GHenna Tweaks
 
+## R6.0
+- New Codename to Lynae
+- Improvement charging
+- Imrovement thermald-device config
+- Improvement kernel and some string too
+
 ## R5.0
 - New Codename to Cyrene
 - Enhance some fast charging lib
