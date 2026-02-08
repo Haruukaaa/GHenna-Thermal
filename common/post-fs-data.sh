@@ -15,7 +15,6 @@ fi
 safe_sys_write() {
     [ -w "$1" ] && echo "$2" > "$1" 2>/dev/null || true
 }
-
 # Helper: resetprop quietly
 safe_resetprop() {
     resetprop -n "$1" "$2" 2>/dev/null || true
@@ -152,24 +151,4 @@ apply_hwui_performance() {
         sleep 2
     done
 ) &
-
-####################################
-# LMK
-####################################
-# If the new LMKD daemon is present, prefer it and skip legacy LMK props.
-# Otherwise apply the legacy `ro.lmk.*` tuning values.
-if pidof lmkd >/dev/null 2>&1; then
-    echo "LMKD detected; skipping legacy ro.lmk.* properties" >/dev/kmsg 2>/dev/null || true
-else
-    safe_resetprop ro.lmk.debug false
-    safe_resetprop ro.lmk.upgrade_pressure 40
-    safe_resetprop ro.lmk.downgrade_pressure 60
-    safe_resetprop ro.lmk.kill_heaviest_task false
-    safe_resetprop ro.lmk.psi_complete_stall_ms 500
-    safe_resetprop ro.lmk.psi_partial_stall_ms 70
-    safe_resetprop ro.lmk.thrashing_limit 100
-    safe_resetprop ro.lmk.thrashing_limit_decay 10
-    safe_resetprop ro.lmk.swap_util_max 100
-fi
 done
-
