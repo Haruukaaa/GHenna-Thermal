@@ -1,5 +1,5 @@
 #!/system/bin/sh
-# GHenna Lynae
+# GHenna Laevatain
 wait_until_login() {
   # In case of /data encryption is disabled
   while [[ "$(getprop sys.boot_completed)" != "1" ]]; do
@@ -7,25 +7,25 @@ wait_until_login() {
   done
 }
 
-# Execute main optimization script with proper permissions
-if
-write() {
-  if [ -f "$1" ]; then
-    if [ ! -w "$1" ]; then
-      chmod +w "$1"
+    # Execute main optimization script with proper permissions
+    write() {
+        # usage: write <file_path> "<content>"
+        if [ -f "$1" ]; then
+            if [ ! -w "$1" ]; then
+                chmod +w "$1" 2>/dev/null || true
+            fi
+            echo "$2" > "$1"
+        fi
+    }
+
+    directory="/data/adb/modules/gehenna"
+    fc_script="$directory/system/etc/.nth_fc/.fc_main.sh"
+    if [ -f "$fc_script" ]; then
+        chmod 0755 "$fc_script" 2>/dev/null || true
+        sh "$fc_script"
     fi
-    echo "$2" > "$1"
-  fi
-  directory=/data/adb/modules/gehenna/
-if [ -f  /data/adb/modules/gehenna/system/etc/.nth_fc/.fc_main.sh ]; then
-    chmod 0755 /system/etc/.nth_fc/.fc_main.sh
-    sh /system/etc/.nth_fc/.fc_main.sh
-fi
-done
-}
-
-su -lp 2000 -c "cmd notification post -S bigtext -t 'Lynae' 'Tag' ' First time I saw $(getprop ro.soc.model) I thought that quiet, $(getprop ro.product.board) Man, was I wrong. We clicked instantly.'"
-
+    # Send notification about device model
+su -lp 2000 -c "cmd notification post -S bigtext -t 'Laevatain' 'Tag' 'Hmm, solid reference.'"
     sleep 1
 
     # Enhanced Universal Deep Sleep Optimization
@@ -271,41 +271,70 @@ optimize_gms_doze() {
 
     # Memory and Task Management Optimization
     change_task_affinity() {
-        # $1:task_name $2:cpu_mask (hex format)
-        local ps_ret
+        # $1: task_name (pattern)
+        # $2: cpu_mask (hex or decimal acceptable for taskset)
+        local name mask ps_ret pid tid
+        name="$1"
+        mask="$2"
         ps_ret=$(ps -A 2>/dev/null || ps 2>/dev/null)
-        
-        for temp_pid in $(echo "$ps_ret" | grep -i -E "$1" | grep -v "PID" | awk '{print $1}'); do
-            if [ -d "/proc/$temp_pid" ]; then
-                for temp_tid in $(ls "/proc/$temp_pid/task/" 2>/dev/null); do
-                    # Set CPU affinity using taskset if available
-                    taskset -p "$2" "$temp_tid" 2>/dev/null || {
-                        # Fallback: write directly to cpuset
-                        echo "$temp_tid" > "/dev/cpuset/top-app/tasks" 2>/dev/null
-                    }
+
+        echo "$ps_ret" | grep -i -E "$name" | grep -v "PID" | awk '{print $1}' | while read -r pid; do
+            [ -d "/proc/$pid" ] || continue
+
+            if command -v taskset >/dev/null 2>&1; then
+                # Prefer taskset when available (works on both pid and tid)
+                taskset -p "$mask" "$pid" 2>/dev/null || true
+                for tid in $(ls "/proc/$pid/task/" 2>/dev/null); do
+                    taskset -p "$mask" "$tid" 2>/dev/null || true
+                done
+            else
+                # Fallback: if cpuset exists, try to move threads into top-app (best-effort)
+                for tid in $(ls "/proc/$pid/task/" 2>/dev/null); do
+                    if [ -w "/dev/cpuset/top-app/tasks" ]; then
+                        echo "$tid" > "/dev/cpuset/top-app/tasks" 2>/dev/null || true
+                    fi
                 done
             fi
         done
     }
 
     change_task_cgroup() {
-        # $1:task_name $2:cgroup_name $3:"cpuset"/"stune"
-        local comm
-        for temp_pid in $(echo "$ps_ret" | grep -i -E "$1" | grep -v "PID" | awk '{print $1}'); do
-            for temp_tid in $(ls "/proc/$temp_pid/task/"); do
-                comm="$(cat /proc/$temp_pid/task/$temp_tid/comm)"
-                echo "$temp_tid" >"/dev/$3/$2/tasks"
+        # $1: task_name (pattern)
+        # $2: cgroup_name
+        # $3: "cpuset"/"stune" (subsystem)
+        local name cg sub ps_ret pid tid comm target_dir
+        name="$1"
+        cg="$2"
+        sub="$3"
+        ps_ret=$(ps -A 2>/dev/null || ps 2>/dev/null)
+
+        target_dir="/dev/${sub}/${cg}"
+        if [ ! -d "$target_dir" ] && [ ! -f "$target_dir/tasks" ]; then
+            return 0
+        fi
+        echo "$ps_ret" | grep -i -E "$name" | grep -v "PID" | awk '{print $1}' | while read -r pid; do
+            [ -d "/proc/$pid" ] || continue
+            for tid in $(ls "/proc/$pid/task/" 2>/dev/null); do
+                comm="$(cat /proc/$pid/task/$tid/comm 2>/dev/null)"
+                if [ -w "$target_dir/tasks" ]; then
+                    echo "$tid" > "$target_dir/tasks" 2>/dev/null || true
+                fi
             done
         done
     }
 
     change_task_nice() {
-        # $1:task_name $2:nice(relative to 120)
-        for temp_pid in $(echo "$ps_ret" | grep -i -E "$1" | grep -v "PID" | awk '{print $1}'); do
-            for temp_tid in $(ls "/proc/$temp_pid/task/"); do
-                renice -n +40 -p "$temp_tid"
-                renice -n -19 -p "$temp_tid"
-                renice -n "$2" -p "$temp_tid"
+        # $1: task_name (pattern)
+        # $2: nice value (can be negative)
+        local name nice_val ps_ret pid tid
+        name="$1"
+        nice_val="$2"
+        ps_ret=$(ps -A 2>/dev/null || ps 2>/dev/null)
+
+        echo "$ps_ret" | grep -i -E "$name" | grep -v "PID" | awk '{print $1}' | while read -r pid; do
+            [ -d "/proc/$pid" ] || continue
+            for tid in $(ls "/proc/$pid/task/" 2>/dev/null); do
+                renice -n "$nice_val" -p "$tid" 2>/dev/null || true
             done
         done
     }
@@ -388,35 +417,36 @@ optimize_gms_doze() {
         echo "1000000" > "$h/sched_rt_period_us" 2>/dev/null
     done
 
-    # Thermal Throttling Disable
+    # Thermal Throttling: relax non-battery-related thermal controls safely
     disable_thermal_throttling() {
+        local tz type cd_type hw name
 
-        # Generic Thermal Zone Disable
-        for thermal_zone in /sys/class/thermal/thermal_zone*; do
-            echo "0" > "$thermal_zone/mode" 2>/dev/null
+        # Disable or relax thermal zones except battery/charger/BMS zones
+        for tz in /sys/class/thermal/thermal_zone*; do
+            [ -d "$tz" ] || continue
+            type="$(cat "$tz/type" 2>/dev/null || echo "")"
+            case "$type" in
+                *battery*|*charger*|*bms*|*fuel_gauge*|*battery_therm*)
+                    continue
+                    ;;
+            esac
+            [ -w "$tz/mode" ] && echo "disabled" > "$tz/mode" 2>/dev/null || true
         done
-        
-        # Disable thermal cooling devices
-        for cooling_device in /sys/class/thermal/cooling_device*; do
-            if [ -d "$cooling_device" ]; then
-                echo "0" > "$cooling_device/cur_state" 2>/dev/null
-            fi
+
+        # Disable cooling devices except those explicitly tied to battery/charger
+        for cd in /sys/class/thermal/cooling_device*; do
+            [ -d "$cd" ] || continue
+            cd_type="$(cat "$cd/type" 2>/dev/null || echo "")"
+            case "$cd_type" in
+                *battery*|*charger*|*bms*|*fuel_gauge*)
+                    continue
+                    ;;
+            esac
+            [ -w "$cd/cur_state" ] && echo "0" > "$cd/cur_state" 2>/dev/null || true
         done
-        
-        # Disable hardware monitoring thermal throttling
-        for hwmon in /sys/class/hwmon/hwmon*/temp*_max; do
-            if [ -f "$hwmon" ]; then
-                # Set battery-safe temperature limit (in millidegrees)
-                echo "50000" > "$hwmon" 2>/dev/null
-            fi
-        done
-        
-        # Battery thermal management for charging
-        [ -f /sys/class/power_supply/battery/constant_charge_current_max ] && echo "2000000" > /sys/class/power_supply/battery/constant_charge_current_max 2>/dev/null
-        [ -f /sys/class/power_supply/battery/batt_therm_fcc_limit ] && echo "2000000" > /sys/class/power_supply/battery/batt_therm_fcc_limit 2>/dev/null
-        [ -f /sys/class/power_supply/bms/batt_therm_fcc_limit ] && echo "2000000" > /sys/class/power_supply/bms/batt_therm_fcc_limit 2>/dev/null
+
+        # Do NOT modify battery charging or FCC limits — leave battery/charging controls alone
     }
-
     disable_thermal_throttling
 
 # RCU and Kernel Optimization
@@ -479,48 +509,41 @@ disable_panic_handling() {
 
     # Scheduler Parameters Optimization
     optimize_scheduler_params() {
-                # Disable I/O debugging for common block devices
-for dev in sda loop0 loop1 loop2 loop3 loop4 loop5 loop6 loop7 dm-0 mmcblk0 mmcblk1 mmcblk0rpmb; do
-    safe_sys_write "/sys/block/${dev}/queue/iostats" "0"
-done
-        # Enable scheduler energy awareness
-        [ -f /proc/sys/kernel/sched_energy_aware ] && echo "1" > /proc/sys/kernel/sched_energy_aware 2>/dev/null
-    
-        # Task migration batch size
-        [ -f /proc/sys/kernel/sched_nr_migrate ] && echo "32" > /proc/sys/kernel/sched_nr_migrate 2>/dev/null
-        
-        # Performance event paranoia level
-        [ -f /proc/sys/kernel/perf_event_paranoid ] && echo "0" > /proc/sys/kernel/perf_event_paranoid 2>/dev/null
-        
-        # Child process runs first
-        [ -f /proc/sys/kernel/sched_child_runs_first ] && echo "1" > /proc/sys/kernel/sched_child_runs_first 2>/dev/null
-        
-        # Scheduler tuning scaling
-        [ -f /proc/sys/kernel/sched_tunable_scaling ] && echo "0" > /proc/sys/kernel/sched_tunable_scaling 2>/dev/null
-        
-        # Memory compaction proactiveness
-        [ -f /proc/sys/vm/compaction_proactiveness ] && echo "0" > /proc/sys/vm/compaction_proactiveness 2>/dev/null
-        
-        # Scheduler latency
-        [ -f /proc/sys/kernel/sched_latency_ns ] && echo "4000000" > /proc/sys/kernel/sched_latency_ns 2>/dev/null
-        
-        # Auto group scheduler
-        [ -f /proc/sys/kernel/sched_autogroup_enabled ] && echo "0" > /proc/sys/kernel/sched_autogroup_enabled 2>/dev/null
-        
-        # CPU time limits for perf events
-        [ -f /proc/sys/kernel/perf_cpu_time_max_percent ] && echo "3" > /proc/sys/kernel/perf_cpu_time_max_percent 2>/dev/null
-        
-        # Migration cost threshold
-        [ -f /proc/sys/kernel/sched_migration_cost_ns ] && echo "50000" > /proc/sys/kernel/sched_migration_cost_ns 2>/dev/null
-        
-        # Minimum granularity
-        [ -f /proc/sys/kernel/sched_min_granularity_ns ] && echo "1000000" > /proc/sys/kernel/sched_min_granularity_ns 2>/dev/null
-        
-        # Minimum task utilization for colocation
-        [ -f /proc/sys/kernel/sched_min_task_util_for_colocation ] && echo "0" > /proc/sys/kernel/sched_min_task_util_for_colocation 2>/dev/null
-        
-        # Wakeup granularity
-        [ -f /proc/sys/kernel/sched_wakeup_granularity_ns ] && echo "1500000" > /proc/sys/kernel/sched_wakeup_granularity_ns 2>/dev/null
+    # Scheduler Parameters Optimization
+    optimize_scheduler_params() {
+
+        # Helper to safely write to sysfs/proc files if present
+        safe_sys_write() {
+            local path="$1" val="$2"
+            if [ -e "$path" ]; then
+                if [ ! -w "$path" ]; then
+                    chmod 0644 "$path" 2>/dev/null || true
+                fi
+                printf "%s" "$val" > "$path" 2>/dev/null || true
+            fi
+        }
+
+        # Disable I/O debugging for existing block devices (iterate actual devices)
+        for devpath in /sys/block/*; do
+            [ -d "$devpath" ] || continue
+            dev="$(basename "$devpath")"
+            safe_sys_write "/sys/block/${dev}/queue/iostats" "0"
+        done
+
+        # Scheduler and VM tuning (safe writes)
+        safe_sys_write /proc/sys/kernel/sched_energy_aware 1
+        safe_sys_write /proc/sys/kernel/sched_nr_migrate 32
+        safe_sys_write /proc/sys/kernel/perf_event_paranoid 0
+        safe_sys_write /proc/sys/kernel/sched_child_runs_first 1
+        safe_sys_write /proc/sys/kernel/sched_tunable_scaling 0
+        safe_sys_write /proc/sys/vm/compaction_proactiveness 0
+        safe_sys_write /proc/sys/kernel/sched_latency_ns 4000000
+        safe_sys_write /proc/sys/kernel/sched_autogroup_enabled 0
+        safe_sys_write /proc/sys/kernel/perf_cpu_time_max_percent 3
+        safe_sys_write /proc/sys/kernel/sched_migration_cost_ns 50000
+        safe_sys_write /proc/sys/kernel/sched_min_granularity_ns 1000000
+        safe_sys_write /proc/sys/kernel/sched_min_task_util_for_colocation 0
+        safe_sys_write /proc/sys/kernel/sched_wakeup_granularity_ns 1500000
     }
 
     # Module Parameters
@@ -589,30 +612,16 @@ done
 
     # Panic Control
     disable_panic_handling() {
-        # Panic timeout
-        [ -f /proc/sys/kernel/panic ] && echo "0" > /proc/sys/kernel/panic 2>/dev/null
-        
-        # Panic on OOPs
-        [ -f /proc/sys/kernel/panic_on_oops ] && echo "0" > /proc/sys/kernel/panic_on_oops 2>/dev/null
-        
-        # Panic on warning
-        [ -f /proc/sys/kernel/panic_on_warn ] && echo "0" > /proc/sys/kernel/panic_on_warn 2>/dev/null
-        
-        # Panic on RCU stall
-        [ -f /proc/sys/kernel/panic_on_rcu_stall ] && echo "0" > /proc/sys/kernel/panic_on_rcu_stall 2>/dev/null
-        
-        # Module panic parameter
-        [ -f /sys/module/kernel/parameters/panic ] && echo "0" > /sys/module/kernel/parameters/panic 2>/dev/null
-        
-        # Module panic on warning
-        [ -f /sys/module/kernel/parameters/panic_on_warn ] && echo "0" > /sys/module/kernel/parameters/panic_on_warn 2>/dev/null
-        
-        # Pause on OOPs
-        [ -f /sys/module/kernel/parameters/pause_on_oops ] && echo "0" > /sys/module/kernel/parameters/pause_on_oops 2>/dev/null
-        
-        # RCU stall timeout
-        [ -f /sys/module/kernel/panic_on_rcu_stall ] && echo "0" > /sys/module/kernel/panic_on_rcu_stall 2>/dev/null
-    }
+        # Helper to safely write a value if the file exists
+        write_safe() {
+            local path="$1"; local val="$2"
+            if [ -e "$path" ]; then
+                if [ ! -w "$path" ]; then
+                    chmod 0644 "$path" 2>/dev/null || true
+                fi
+                echo "$val" > "$path" 2>/dev/null || true
+            fi
+        }
 
     # Memory Cache and Debug Optimization
     optimize_memory_cache() {
@@ -673,5 +682,5 @@ disable_gpu_debug() {
         echo "0" > /sys/kernel/debug/tracing/events/sde/enable 2>/dev/null
     fi
 }
-su -lp 2000 -c "cmd notification post -S bigtext -t 'Lynae' 'Tag' 'Lemme let you in on a little secret.'"
+su -lp 2000 -c "cmd notification post -S bigtext -t 'Laevatain' 'Tag' 'Ah, here you are.'"
     exit 0
