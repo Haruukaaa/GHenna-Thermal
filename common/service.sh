@@ -340,50 +340,44 @@ optimize_gms_doze() {
     }
 
     optimize_memory_management() {
-        local ps_ret
-        ps_ret=$(ps -A 2>/dev/null || ps 2>/dev/null)
-        
-        # Optimize kswapd (kernel swap daemon)
-        # Higher priority, pin to efficiency cores
-        change_task_nice "kswapd" "-10"
-        change_task_affinity "kswapd" "0f"  # Use first 4 cores
-        
-        # Optimize oom_reaper (out of memory killer)
-        # High priority, pin to efficiency cores
-        change_task_nice "oom_reaper" "-10"
-        change_task_affinity "oom_reaper" "0f"  # Use first 4 cores
-        
-        # Optimize memory compaction daemon
-        change_task_nice "kcompactd" "-5" 2>/dev/null
-        
-        # Optimize writeback daemon
-        change_task_nice "kthreadd" "-5" 2>/dev/null
-        change_task_nice "writeback" "-5" 2>/dev/null
-        
-        # Memory pressure reduction
-        echo "0" > /proc/sys/vm/watermark_scale_factor 2>/dev/null
-        echo "0" > /proc/sys/vm/numa_stat 2>/dev/null
-        
-        # Aggressive memory reclaim
-        echo "100" > /proc/sys/vm/swappiness 2>/dev/null
-        echo "10" > /proc/sys/vm/dirty_ratio 2>/dev/null
-        echo "5" > /proc/sys/vm/dirty_background_ratio 2>/dev/null
-        
-        # Disable memory overcommit safeguards
-        echo "1" > /proc/sys/vm/overcommit_memory 2>/dev/null
-        
-        # Reduce memory fragmentation
-        echo "1" > /proc/sys/vm/compact_unevictable_allowed 2>/dev/null
-        
-        # Disable transparent huge pages to reduce latency
-        echo "never" > /sys/kernel/mm/transparent_hugepage/enabled 2>/dev/null
-        echo "never" > /sys/kernel/mm/transparent_hugepage/defrag 2>/dev/null
-        
-        # Memory pool optimization
-        for mem_pool in /sys/module/*/parameters/mempools; do
-            if [ -d "$(dirname "$mem_pool")" ]; then
-                echo "0" > "$mem_pool" 2>/dev/null
+        # Define safe write helper locally if not in scope
+        safe_sys_write() {
+            local path="$1" val="$2"
+            if [ -e "$path" ]; then
+                [ -w "$path" ] || chmod 0644 "$path" 2>/dev/null || true
+                printf "%s" "$val" > "$path" 2>/dev/null || true
             fi
+        }
+
+        # Check for LMKD daemon (modern Android 11+)
+        if pidof lmkd >/dev/null 2>&1; then
+            echo "LMKD detected; using modern memory killer" >/dev/kmsg 2>/dev/null || true
+        fi
+
+        # Optimize kernel memory daemons
+        change_task_nice "kswapd" "-10"
+        change_task_affinity "kswapd" "0f"
+        change_task_nice "oom_reaper" "-10"
+        change_task_affinity "oom_reaper" "0f"
+        change_task_nice "kcompactd" "-5"
+        change_task_nice "writeback" "-5"
+
+        # Memory tuning parameters
+        safe_sys_write /proc/sys/vm/watermark_scale_factor 0
+        safe_sys_write /proc/sys/vm/numa_stat 0
+        safe_sys_write /proc/sys/vm/swappiness 100
+        safe_sys_write /proc/sys/vm/dirty_ratio 10
+        safe_sys_write /proc/sys/vm/dirty_background_ratio 5
+        safe_sys_write /proc/sys/vm/overcommit_memory 1
+        safe_sys_write /proc/sys/vm/compact_unevictable_allowed 1
+
+        # Disable transparent huge pages for latency reduction
+        safe_sys_write /sys/kernel/mm/transparent_hugepage/enabled never
+        safe_sys_write /sys/kernel/mm/transparent_hugepage/defrag never
+
+        # Clear memory pools
+        for pool in /sys/module/*/parameters/mempools; do
+            [ -f "$pool" ] && safe_sys_write "$pool" 0
         done
     }
 
@@ -472,7 +466,7 @@ if [ -f /sys/kernel/debug/sched_features ]; then
     echo "ENERGY_AWARE" > /sys/kernel/debug/sched_features 2>/dev/null
 fi
 # Panic Control
-disable_panic_handling() {
+disable_panic_handling()
     # Helper to safely write a value if the file exists
     write_safe() {
         local path="$1"; local val="$2"
@@ -507,8 +501,6 @@ disable_panic_handling() {
     done
 }
 
-    # Scheduler Parameters Optimization
-    optimize_scheduler_params() {
     # Scheduler Parameters Optimization
     optimize_scheduler_params() {
 
