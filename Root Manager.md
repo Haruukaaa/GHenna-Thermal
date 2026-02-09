@@ -13,7 +13,7 @@ Please to double check what Root manager base you use currently, but if you faci
 | [KowSU](https://github.com/deepongi-labs/KernelSU-KoWSU) | ❓ |
 | [APatch](https://github.com/bmax121/APatch) | ❓ |
 | [MamboSU](https://t.me/WebsArch/90) | :white_check_mark: |
-| [Magisk Delta (Kitsune)](https://kitsune-mask.vercel.app/) | ❓ |
+| [Magisk Delta (Kitsune)](https://kitsune-mask.vercel.app/) | :white_check_mark: |
 
 ## Reporting a Vulnerability
 
