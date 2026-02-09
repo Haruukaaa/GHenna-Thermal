@@ -1,5 +1,12 @@
 # CL - GHenna Tweaks
 
+## R7.0
+- New release with codename to Laevatain
+- Improvement thermal and charging control
+- Improvement other source
+- Refine LMKD and revert from post-fs to service for better result
+- Adding network tweaks with Google DNS
+
 ## R6.0
 - New Codename to Lynae
 - Improvement charging
