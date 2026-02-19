@@ -7,7 +7,7 @@ wait_until_login() {
   done
 }
     # Send notification about device model
-su -lp 2000 -c "cmd notification post -S bigtext -t 'Ye Shunguang' 'Tag' ' I will be right here waiting.'"
+su -lp 2000 -c "cmd notification post -S bigtext -t 'Ye Shunguang' 'Tag' 'I will be right here waiting.'"
     sleep 1
 
     # Enhanced Universal Deep Sleep Optimization
@@ -75,50 +75,32 @@ su -lp 2000 -c "cmd notification post -S bigtext -t 'Ye Shunguang' 'Tag' ' I wil
     pm trim-caches 999999999 2>/dev/null
 }
 
-# Enhanced GMS Doze Management
 optimize_gms_doze() {
+    local gms_pkg="com.google.android.gms"
     local gms_components=(
-        "com.google.android.gms/.chimera.GmsIntentOperationService"
-        "com.google.android.gms/com.google.android.gms.mdm.receivers.MdmDeviceAdminReceiver"
-        "com.google.android.gms/com.google.android.gms.chimera.GmsInitializer"
-        "com.google.android.gms/com.google.android.gms.analytics.service.AnalyticsService"
-        "com.google.android.gms/com.google.android.gms.phenotype.service.PhenotypeService"
-        "com.google.android.gms/com.google.android.gms.update.SystemUpdateService"
-        "com.google.android.gms/com.google.android.gms.update.SystemUpdateActivity"
-        "com.google.android.gms/com.google.android.gms.mdm.services.DevicePolicyService"
-        "com.google.android.gms/com.google.android.gms.mdm.MdmService"
-        "com.google.android.gms/com.google.android.gms.usagereporting.service.UsageReportingService"
+        "$gms_pkg/.chimera.GmsIntentOperationService"
+        "$gms_pkg/com.google.android.gms.mdm.receivers.MdmDeviceAdminReceiver"
+        "$gms_pkg/com.google.android.gms.chimera.GmsInitializer"
+        "$gms_pkg/com.google.android.gms.analytics.service.AnalyticsService"
+        "$gms_pkg/com.google.android.gms.phenotype.service.PhenotypeService"
+        "$gms_pkg/com.google.android.gms.update.SystemUpdateService"
+        "$gms_pkg/com.google.android.gms.update.SystemUpdateActivity"
+        "$gms_pkg/com.google.android.gms.mdm.services.DevicePolicyService"
+        "$gms_pkg/com.google.android.gms.mdm.MdmService"
+        "$gms_pkg/com.google.android.gms.usagereporting.service.UsageReportingService"
+        "$gms_pkg/com.google.android.gms.location.service.LocationService"
+        "$gms_pkg/com.google.android.gms.location.GeofenceService"
     )
-    
-    # Disable aggressive GMS components
+    echo "[+] Disabling selected GMS components..."
     for component in "${gms_components[@]}"; do
-        su -c "pm disable '$component'" 2>/dev/null
+        su -c "pm disable $component" 2>/dev/null
     done
-    
-    # Put GMS in doze whitelist restrictions
-    su -c "pm set-inactive com.google.android.gms true" 2>/dev/null
-    
-    # Disable GMS background processes
-    su -c "pm disable-user --user 0 com.google.android.gms" 2>/dev/null
-    
-    # Restrict battery optimization for GMS
-    su -c "dumpsys deviceidle whitelist -com.google.android.gms" 2>/dev/null
-    
-    # Force stop GMS to free resources immediately
-    su -c "am force-stop com.google.android.gms" 2>/dev/null
-    
-    # Kill any remaining GMS processes
-    su -c "killall -9 com.google.android.gms" 2>/dev/null || su -c "pkill -f com.google.android.gms" 2>/dev/null
-    
-    # Disable GMS location services to reduce battery drain
-    su -c "pm disable com.google.android.gms/com.google.android.gms.location.service.LocationService" 2>/dev/null
-    su -c "pm disable com.google.android.gms/com.google.android.gms.location.GeofenceService" 2>/dev/null
-    
-    # Restrict GMS network usage
-    su -c "pm restrict-background-data com.google.android.gms true" 2>/dev/null
-    
-    # Set aggressive battery optimization for GMS
-    su -c "dumpsys deviceidle tempwhitelist -c com.google.android.gms" 2>/dev/null
+    su -c "pm set-inactive $gms_pkg true" 2>/dev/null
+    su -c "cmd appops set $gms_pkg RUN_IN_BACKGROUND ignore" 2>/dev/null
+    su -c "cmd appops set $gms_pkg WAKE_LOCK ignore" 2>/dev/null
+    su -c "cmd deviceidle whitelist -$gms_pkg" 2>/dev/null
+    su -c "am force-stop $gms_pkg" 2>/dev/null
+    echo "[+] GMS optimization applied."
 }
     # Enhanced Tracing and Logging Optimization
     disable_tracing_and_logging() {
