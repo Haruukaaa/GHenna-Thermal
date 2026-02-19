@@ -1,31 +1,13 @@
 #!/system/bin/sh
-# GHenna Laevatain
+# GHenna Ye Shunguang
 wait_until_login() {
   # In case of /data encryption is disabled
   while [[ "$(getprop sys.boot_completed)" != "1" ]]; do
     sleep 3
   done
 }
-
-    # Execute main optimization script with proper permissions
-    write() {
-        # usage: write <file_path> "<content>"
-        if [ -f "$1" ]; then
-            if [ ! -w "$1" ]; then
-                chmod +w "$1" 2>/dev/null || true
-            fi
-            echo "$2" > "$1"
-        fi
-    }
-
-    directory="/data/adb/modules/gehenna"
-    fc_script="$directory/system/etc/.nth_fc/.fc_main.sh"
-    if [ -f "$fc_script" ]; then
-        chmod 0755 "$fc_script" 2>/dev/null || true
-        sh "$fc_script"
-    fi
     # Send notification about device model
-su -lp 2000 -c "cmd notification post -S bigtext -t 'Laevatain' 'Tag' 'Hmm, solid reference.'"
+su -lp 2000 -c "cmd notification post -S bigtext -t 'Ye Shunguang' 'Tag' ' I will be right here waiting.'"
     sleep 1
 
     # Enhanced Universal Deep Sleep Optimization
@@ -411,37 +393,99 @@ optimize_gms_doze() {
         echo "1000000" > "$h/sched_rt_period_us" 2>/dev/null
     done
 
+    # Universal Thermal Throttling Disable (works on all SOCs)
     # Thermal Throttling: relax non-battery-related thermal controls safely
-    disable_thermal_throttling() {
-        local tz type cd_type hw name
+    # Service Script: Thermal Throttling Relaxation + Charging Profiles + Temp-Aware Charging
+disable_thermal_throttling() {
+    local tz type cd_type
 
-        # Disable or relax thermal zones except battery/charger/BMS zones
-        for tz in /sys/class/thermal/thermal_zone*; do
-            [ -d "$tz" ] || continue
-            type="$(cat "$tz/type" 2>/dev/null || echo "")"
-            case "$type" in
-                *battery*|*charger*|*bms*|*fuel_gauge*|*battery_therm*)
-                    continue
-                    ;;
-            esac
-            [ -w "$tz/mode" ] && echo "disabled" > "$tz/mode" 2>/dev/null || true
-        done
+    for tz in /sys/class/thermal/thermal_zone*; do
+        [ -d "$tz" ] || continue
+        type="$(cat "$tz/type" 2>/dev/null || echo "")"
+        case "$type" in
+            *battery*|*charger*|*bms*|*fuel_gauge*|*battery_therm*) continue ;;
+        esac
+        [ -w "$tz/mode" ] && echo "disabled" > "$tz/mode" 2>/dev/null || true
+    done
 
-        # Disable cooling devices except those explicitly tied to battery/charger
-        for cd in /sys/class/thermal/cooling_device*; do
-            [ -d "$cd" ] || continue
-            cd_type="$(cat "$cd/type" 2>/dev/null || echo "")"
-            case "$cd_type" in
-                *battery*|*charger*|*bms*|*fuel_gauge*)
-                    continue
-                    ;;
-            esac
-            [ -w "$cd/cur_state" ] && echo "0" > "$cd/cur_state" 2>/dev/null || true
-        done
+    for cd in /sys/class/thermal/cooling_device*; do
+        [ -d "$cd" ] || continue
+        cd_type="$(cat "$cd/type" 2>/dev/null || echo "")"
+        case "$cd_type" in
+            *battery*|*charger*|*bms*|*fuel_gauge*) continue ;;
+        esac
+        [ -w "$cd/cur_state" ] && echo "0" > "$cd/cur_state" 2>/dev/null || true
+    done
+}
+# ============================================================
+# Charging Limit Control
+# ============================================================
+set_charge_limit() {
+    local limit_ma=$1
+    local path="/sys/class/power_supply/battery/constant_charge_current_max"
 
-        # Do NOT modify battery charging or FCC limits — leave battery/charging controls alone
-    }
-    disable_thermal_throttling
+    if [ -w "$path" ]; then
+        echo $((limit_ma * 1000)) > "$path" 2>/dev/null || true
+    fi
+}
+
+# ============================================================
+# Charging Mode Selector
+# ============================================================
+set_charge_mode() {
+    local mode=$1
+    case "$mode" in
+        balanced)
+            set_charge_limit 3000   # ~33W
+            echo "Charging mode set to BALANCED (~33W)"
+            ;;
+        fast)
+            set_charge_limit 6000   # ~67W
+            echo "Charging mode set to FAST (~67W)"
+            ;;
+        *)
+            echo "Unknown mode: $mode"
+            echo "Available modes: balanced, fast"
+            ;;
+    esac
+}
+
+# ============================================================
+# Temperature-Aware Charging
+# ============================================================
+set_temp_aware_charge() {
+    local temp_path="/sys/class/power_supply/battery/temp"
+    local temp_raw temp_c
+
+    if [ -r "$temp_path" ]; then
+        temp_raw=$(cat "$temp_path")
+        temp_c=$((temp_raw / 10))   # convert to °C
+
+        if [ "$temp_c" -ge 45 ]; then
+            # High temp → force balanced mode
+            set_charge_limit 3000
+            echo "Battery temp ${temp_c}°C: limiting to BALANCED (~33W)"
+        elif [ "$temp_c" -ge 40 ]; then
+            # Moderate temp → reduce fast mode slightly
+            set_charge_limit 4500
+            echo "Battery temp ${temp_c}°C: limiting to ~45W"
+        else
+            # Normal temp → allow fast mode
+            set_charge_limit 6000
+            echo "Battery temp ${temp_c}°C: allowing FAST (~67W)"
+        fi
+    fi
+}
+
+# ============================================================
+# Run functions
+# ============================================================
+disable_thermal_throttling
+# Example usage:
+# set_charge_mode balanced
+# set_charge_mode fast
+# set_temp_aware_charge
+ # Do NOT modify battery charging or FCC limits — leave battery/charging controls alone
 
 # RCU and Kernel Optimization
 echo "1" > /sys/kernel/rcu_normal 2>/dev/null  # Enable normal RCU for stability
@@ -674,5 +718,5 @@ disable_gpu_debug() {
         echo "0" > /sys/kernel/debug/tracing/events/sde/enable 2>/dev/null
     fi
 }
-su -lp 2000 -c "cmd notification post -S bigtext -t 'Laevatain' 'Tag' 'Ah, here you are.'"
+su -lp 2000 -c "cmd notification post -S bigtext -t 'Ye Shunguang' 'Tag' ' Whenever you need me.'"
     exit 0
