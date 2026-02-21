@@ -15,7 +15,13 @@
     { "Name": "UClampMax", "Controller": "cpu", "File": "cpu.uclamp.max" },
     { "Name": "UClampLatencySensitive", "Controller": "cpu", "File": "cpu.uclamp.latency_sensitive" },
 
-    { "Name": "FreezerState", "Controller": "freezer", "File": "cgroup.freeze" }
+    { "Name": "FreezerState", "Controller": "freezer", "File": "cgroup.freeze" },
+
+    { "Name": "IOForeground", "Controller": "blkio", "File": "foreground" },
+    { "Name": "IOBackground", "Controller": "blkio", "File": "background" },
+    { "Name": "IOLowPriority", "Controller": "blkio", "File": "low" },
+    { "Name": "IOHighPriority", "Controller": "blkio", "File": "high" },
+    { "Name": "IOMaxPriority", "Controller": "blkio", "File": "max" }
   ],
 
   "Profiles": [
@@ -23,16 +29,18 @@
       "Name": "Perf.High",
       "Actions": [
         { "Name": "JoinCgroup", "Params": { "Controller": "cpu", "Path": "foreground" } },
+        { "Name": "JoinCgroup", "Params": { "Controller": "blkio", "Path": "high" } },
         { "Name": "SetAttribute", "Params": { "Name": "UClampLatencySensitive", "Value": "1" } },
-        { "Name": "LogAction", "Params": { "Message": "High performance mode activated" } }
+        { "Name": "LogAction", "Params": { "Message": "High performance mode activated with high I/O priority" } }
       ]
     },
     {
       "Name": "Perf.Max",
       "Actions": [
         { "Name": "JoinCgroup", "Params": { "Controller": "cpu", "Path": "top-app" } },
+        { "Name": "JoinCgroup", "Params": { "Controller": "blkio", "Path": "max" } },
         { "Name": "SetAttribute", "Params": { "Name": "UClampLatencySensitive", "Value": "1" } },
-        { "Name": "LogAction", "Params": { "Message": "Max performance mode activated" } }
+        { "Name": "LogAction", "Params": { "Message": "Max performance mode activated with max I/O priority" } }
       ]
     },
     {
@@ -40,7 +48,8 @@
       "Actions": [
         { "Name": "SetAttribute", "Params": { "Name": "MemSoftLimit", "Value": "16MB" } },
         { "Name": "SetAttribute", "Params": { "Name": "MemSwappiness", "Value": "150" } },
-        { "Name": "LogAction", "Params": { "Message": "Low memory tier applied" } }
+        { "Name": "JoinCgroup", "Params": { "Controller": "blkio", "Path": "low" } },
+        { "Name": "LogAction", "Params": { "Message": "Low memory tier applied with low I/O priority" } }
       ]
     },
     {
@@ -48,13 +57,15 @@
       "Actions": [
         { "Name": "SetAttribute", "Params": { "Name": "MemSoftLimit", "Value": "512MB" } },
         { "Name": "SetAttribute", "Params": { "Name": "MemSwappiness", "Value": "100" } },
-        { "Name": "LogAction", "Params": { "Message": "High memory tier applied" } }
+        { "Name": "JoinCgroup", "Params": { "Controller": "blkio", "Path": "foreground" } },
+        { "Name": "LogAction", "Params": { "Message": "High memory tier applied with foreground I/O priority" } }
       ]
     },
     {
       "Name": "ResetDefaults",
       "Actions": [
         { "Name": "JoinCgroup", "Params": { "Controller": "cpu", "Path": "" } },
+        { "Name": "JoinCgroup", "Params": { "Controller": "blkio", "Path": "" } },
         { "Name": "SetAttribute", "Params": { "Name": "MemSwappiness", "Value": "100" } },
         { "Name": "LogAction", "Params": { "Message": "System reset to defaults" } }
       ]
