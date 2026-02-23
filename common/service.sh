@@ -97,17 +97,28 @@ optimize_gms_doze() {
         "$gms_pkg/com.google.android.gms.location.service.LocationService"
         "$gms_pkg/com.google.android.gms.location.GeofenceService"
     )
-    echo "[+] Disabling selected GMS components..."
+
+    # Disable selected GMS components
     for component in "${gms_components[@]}"; do
-        su -c "pm disable $component" 2>/dev/null
+        if su -c "pm disable $component" >/dev/null 2>&1; then
+            echo "    [-] Disabled: $component"
+        else
+            echo "    [!] Failed to disable: $component"
+        fi
     done
-    su -c "pm set-inactive $gms_pkg true" 2>/dev/null
-    su -c "cmd appops set $gms_pkg RUN_IN_BACKGROUND ignore" 2>/dev/null
-    su -c "cmd appops set $gms_pkg WAKE_LOCK ignore" 2>/dev/null
-    su -c "cmd deviceidle whitelist -$gms_pkg" 2>/dev/null
-    su -c "am force-stop $gms_pkg" 2>/dev/null
-    echo "[+] GMS optimization applied."
+
+    # Apply background restrictions
+    su -c "pm set-inactive $gms_pkg true" >/dev/null 2>&1
+    su -c "cmd appops set $gms_pkg RUN_IN_BACKGROUND ignore" >/dev/null 2>&1
+    su -c "cmd appops set $gms_pkg WAKE_LOCK ignore" >/dev/null 2>&1
+
+    # Remove from device idle whitelist
+    su -c "cmd deviceidle whitelist -$gms_pkg" >/dev/null 2>&1
+
+    # Force-stop the package
+    su -c "am force-stop $gms_pkg" >/dev/null 2>&1
 }
+
     # Enhanced Tracing and Logging Optimization
     disable_tracing_and_logging() {
         # Disable accessibility tracing
