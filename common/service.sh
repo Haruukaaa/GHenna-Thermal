@@ -26,54 +26,60 @@ su -lp 2000 -c "cmd notification post -S bigtext -t 'Ye Shunguang' 'Tag' 'I will
             fi
         done
     
-    # Device Idle Configuration
-    dumpsys deviceidle reset 2>/dev/null
-    dumpsys deviceidle enable light 2>/dev/null
-    dumpsys deviceidle enable deep 2>/dev/null
-    dumpsys deviceidle force-idle 2>/dev/null
-    
-    # Aggressive Doze Constants
-    settings put global device_idle_constants inactive_to=30000,motion_inactive_to=0,wait_for_unlock=true 2>/dev/null
-    
-    # Disable keep-alive mechanisms
-    settings put global low_power_mode 1 2>/dev/null
-    settings put global low_power_mode_trigger_level 20 2>/dev/null
-    settings put global low_power 1 2>/dev/null
-    
-    # Disable network keep-alives
-    settings put global wifi_sleep_policy 2 2>/dev/null
-    settings put global mobile_data_always_on 0 2>/dev/null
-    settings put global wifi_always_on 0 2>/dev/null
-    settings put global background_data 0 2>/dev/null
-    settings put global auto_sync 0 2>/dev/null
-    
-    # Restrict network operations during sleep
-    settings put global network_scoring_ui_enabled 0 2>/dev/null
-    settings put global airplane_mode_on 1 2>/dev/null
-    
-    # Disable location services during sleep
-    settings put secure location_mode 0 2>/dev/null
-    
-    # Disable adaptive battery management for aggressive idle
-    settings put global adaptive_battery_management_enabled 0 2>/dev/null
-        
-    # Disable wakeup sources that prevent deep sleep
-    for wakeup in /sys/class/wakeup/*/active_count; do
-        if [ -d "$(dirname "$wakeup")" ]; then
-            echo "disabled" > "$(dirname "$wakeup")/active_wakeup" 2>/dev/null
-        fi
-    done
-    
-    # Disable wakelocks for common wake sources
-    echo "0" > /sys/power/wake_lock 2>/dev/null || true
-    
-    # Force battery saver mode
-    cmd battery set level 100 2>/dev/null
-    cmd battery unplug 2>/dev/null
-    
-    # Trim memory caches
-    pm trim-caches 999999999 2>/dev/null
-}
+# Aggressive Deep Sleep Configuration
+
+# Reset and enable device idle modes
+dumpsys deviceidle reset >/dev/null 2>&1
+dumpsys deviceidle enable light >/dev/null 2>&1
+dumpsys deviceidle enable deep >/dev/null 2>&1
+dumpsys deviceidle force-idle >/dev/null 2>&1
+
+# Aggressive Doze constants (shorter timers)
+settings put global device_idle_constants \
+    inactive_to=15000,motion_inactive_to=0,min_time_to_alarm=60000,max_idle_pending_time=30000,max_idle_pending_jobs_count=1,wait_for_unlock=true >/dev/null 2>&1
+
+# Enable low power mode
+settings put global low_power_mode 1 >/dev/null 2>&1
+settings put global low_power_mode_trigger_level 15 >/dev/null 2>&1
+settings put global low_power 1 >/dev/null 2>&1
+
+# Disable network keep-alives
+settings put global wifi_sleep_policy 2 >/dev/null 2>&1
+settings put global mobile_data_always_on 0 >/dev/null 2>&1
+settings put global wifi_always_on 0 >/dev/null 2>&1
+settings put global background_data 0 >/dev/null 2>&1
+settings put global auto_sync 0 >/dev/null 2>&1
+
+# Restrict network operations during sleep
+settings put global network_scoring_ui_enabled 0 >/dev/null 2>&1
+settings put global airplane_mode_on 1 >/dev/null 2>&1
+
+# Disable location services during sleep
+settings put secure location_mode 0 >/dev/null 2>&1
+
+# Disable adaptive battery management
+settings put global adaptive_battery_management_enabled 0 >/dev/null 2>&1
+
+# Disable wakeup sources
+for wakeup in /sys/class/wakeup/*/active_count; do
+    dir="$(dirname "$wakeup")"
+    if [ -d "$dir" ]; then
+        echo "disabled" > "$dir/active_wakeup" 2>/dev/null
+    fi
+done
+
+# Disable wakelocks
+echo "0" > /sys/power/wake_lock 2>/dev/null || true
+
+# Force battery saver mode
+cmd battery set level 100 >/dev/null 2>&1
+cmd battery unplug >/dev/null 2>&1
+
+# Suspend background jobs
+cmd jobscheduler run -u >/dev/null 2>&1 || true
+
+# Trim memory caches
+pm trim-caches 999999999 >/dev/null 2>&1
 
 optimize_gms_doze() {
     local gms_pkg="com.google.android.gms"
