@@ -232,12 +232,6 @@ optimize_gms_doze() {
         setprop debug.sf.hw 1
         setprop debug.sf.latch_unsignaled 1
         setprop ro.hardware.keystore msm8998
-
-        # Frame rate optimization
-        setprop debug.force_rtl false
-        setprop debug.hwui.drop_shadow_cache_size 6
-        setprop debug.hwui.texture_cache_flushrate 0.4
-        setprop debug.hwui.drop_shadow_cache_size 6
         
         # Disable VSync blocking
         setprop debug.atrace.tags.enableflags 0
@@ -330,10 +324,27 @@ optimize_gms_doze() {
             fi
         }
 
-        # Check for LMKD daemon (modern Android 11+)
-        if pidof lmkd >/dev/null 2>&1; then
-            echo "LMKD detected; using modern memory killer" >/dev/kmsg 2>/dev/null || true
+# Check for LMKD daemon (Android 11+)
+check_lmkd() {
+    if pidof lmkd >/dev/null 2>&1; then
+        echo "[+] LMKD detected: modern low memory killer active" \
+            >/dev/kmsg 2>/dev/null || echo "[+] LMKD detected"
+        
+        # Optional: show LMKD process info
+        local lmkd_pid
+        lmkd_pid=$(pidof lmkd)
+        echo "    [-] LMKD PID: $lmkd_pid"
+        
+        # Optional: check memory pressure levels
+        if [ -r /proc/pressure/memory ]; then
+            echo "    [-] Memory pressure status:"
+            cat /proc/pressure/memory
         fi
+    else
+        echo "[!] LMKD not detected; device may use legacy lowmemorykiller" \
+            >/dev/kmsg 2>/dev/null || echo "[!] LMKD not detected"
+    fi
+}
 
         # Optimize kernel memory daemons
         change_task_nice "kswapd" "-10"
