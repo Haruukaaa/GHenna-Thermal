@@ -25,8 +25,6 @@ su -lp 2000 -c "cmd notification post -S bigtext -t 'Ye Shunguang' 'Tag' 'I will
                 echo "disabled" > "$(dirname "$wakeup")/active_wakeup" 2>/dev/null
             fi
         done
-    
-# Aggressive Deep Sleep Configuration
 
 # Reset and enable device idle modes
 dumpsys deviceidle reset >/dev/null 2>&1
@@ -59,14 +57,6 @@ settings put secure location_mode 0 >/dev/null 2>&1
 
 # Disable adaptive battery management
 settings put global adaptive_battery_management_enabled 0 >/dev/null 2>&1
-
-# Disable wakeup sources
-for wakeup in /sys/class/wakeup/*/active_count; do
-    dir="$(dirname "$wakeup")"
-    if [ -d "$dir" ]; then
-        echo "disabled" > "$dir/active_wakeup" 2>/dev/null
-    fi
-done
 
 # Disable wakelocks
 echo "0" > /sys/power/wake_lock 2>/dev/null || true
@@ -119,53 +109,7 @@ optimize_gms_doze() {
     su -c "am force-stop $gms_pkg" >/dev/null 2>&1
 }
 
-    # Enhanced Tracing and Logging Optimization
-    disable_tracing_and_logging() {
-        # Disable accessibility tracing
-        cmd accessibility stop-trace 2>/dev/null
-        
-        # Disable migard tracing (if available)
-        cmd migard dump-trace false 2>/dev/null
-        cmd migard start-trace false 2>/dev/null
-        cmd migard stop-trace true 2>/dev/null
-        cmd migard trace-buffer-size 0 2>/dev/null
-        
-        # Disable input method tracing
-        cmd input_method tracing stop 2>/dev/null
-        
-        # Disable window and UI tracing
-        cmd window tracing size 0 2>/dev/null
-        cmd window tracing stop 2>/dev/null
-        
-        # Disable status bar tracing
-        cmd statusbar tracing stop 2>/dev/null
-        
-        # Disable memory tracing
-        cmd memory_trace disable 2>/dev/null
-        
-        # Disable animation tracing
-        cmd animation tracing stop 2>/dev/null
-        
-        # Disable network tracing
-        cmd net_utils tracing disable 2>/dev/null
-        
-        # Disable graphics tracing
-        cmd graphics tracing stop 2>/dev/null
-        
-        # Disable package manager tracing
-        cmd package tracing stop 2>/dev/null
-        
-        # Disable wm tracing
-        cmd wm tracing stop 2>/dev/null
-        
-        # Disable activity manager tracing
-        cmd activity tracing stop 2>/dev/null
-        
-        # Disable broadcast tracing
-        cmd broadcast tracing disable 2>/dev/null
-    }
-
-    disable_tracing_and_logging
+disable_tracing_and_logging() { cmd accessibility stop-trace 2>/dev/null && cmd migard dump-trace false 2>/dev/null && cmd migard start-trace false 2>/dev/null && cmd migard stop-trace true 2>/dev/null && cmd migard trace-buffer-size 0 2>/dev/null && cmd input_method tracing stop 2>/dev/null && cmd window tracing size 0 2>/dev/null && cmd window tracing stop 2>/dev/null && cmd statusbar tracing stop 2>/dev/null && cmd memory_trace disable 2>/dev/null && cmd animation tracing stop 2>/dev/null && cmd net_utils tracing disable 2>/dev/null && cmd graphics tracing stop 2>/dev/null && cmd package tracing stop 2>/dev/null && cmd wm tracing stop 2>/dev/null && cmd activity tracing stop 2>/dev/null && cmd broadcast tracing disable 2>/dev/null; }
 
     # Aggressive Logcat Optimization
     optimize_logcat() {
@@ -207,8 +151,6 @@ optimize_gms_doze() {
         echo "0" > /sys/module/selinux/parameters/enforce 2>/dev/null 2>&1 || true
     }
 
-    optimize_logcat
-
     # Enhanced SurfaceFlinger and Graphics Optimization
     optimize_graphics() {
         # Prioritize SurfaceFlinger for rendering
@@ -241,8 +183,6 @@ optimize_gms_doze() {
         setprop ro.hwui.render_ahead_lines 2
         setprop ro.hwui.texture_cache_size 72
     }
-
-    optimize_graphics
 
     # Memory and Task Management Optimization
     change_task_affinity() {
@@ -346,34 +286,31 @@ check_lmkd() {
     fi
 }
 
-        # Optimize kernel memory daemons
-        change_task_nice "kswapd" "-10"
-        change_task_affinity "kswapd" "0f"
-        change_task_nice "oom_reaper" "-10"
-        change_task_affinity "oom_reaper" "0f"
-        change_task_nice "kcompactd" "-5"
-        change_task_nice "writeback" "-5"
+# Optimize kernel memory daemons
+change_task_nice "kswapd" "-15"
+change_task_affinity "kswapd" "0f"
+change_task_nice "oom_reaper" "-15"
+change_task_affinity "oom_reaper" "0f"
+change_task_nice "kcompactd" "-10"
+change_task_nice "writeback" "-10"
 
-        # Memory tuning parameters
-        safe_sys_write /proc/sys/vm/watermark_scale_factor 0
-        safe_sys_write /proc/sys/vm/numa_stat 0
-        safe_sys_write /proc/sys/vm/swappiness 100
-        safe_sys_write /proc/sys/vm/dirty_ratio 10
-        safe_sys_write /proc/sys/vm/dirty_background_ratio 5
-        safe_sys_write /proc/sys/vm/overcommit_memory 1
-        safe_sys_write /proc/sys/vm/compact_unevictable_allowed 1
+# Memory tuning parameters
+safe_sys_write /proc/sys/vm/watermark_scale_factor 1
+safe_sys_write /proc/sys/vm/numa_stat 0
+safe_sys_write /proc/sys/vm/swappiness 60
+safe_sys_write /proc/sys/vm/dirty_ratio 15
+safe_sys_write /proc/sys/vm/dirty_background_ratio 5
+safe_sys_write /proc/sys/vm/overcommit_memory 1
+safe_sys_write /proc/sys/vm/compact_unevictable_allowed 1
 
-        # Disable transparent huge pages for latency reduction
-        safe_sys_write /sys/kernel/mm/transparent_hugepage/enabled never
-        safe_sys_write /sys/kernel/mm/transparent_hugepage/defrag never
+# Disable transparent huge pages for latency reduction
+safe_sys_write /sys/kernel/mm/transparent_hugepage/enabled never
+safe_sys_write /sys/kernel/mm/transparent_hugepage/defrag never
 
-        # Clear memory pools
-        for pool in /sys/module/*/parameters/mempools; do
-            [ -f "$pool" ] && safe_sys_write "$pool" 0
-        done
-    }
-
-    optimize_memory_management
+# Clear memory pools
+for pool in /sys/module/*/parameters/mempools; do
+    [ -f "$pool" ] && safe_sys_write "$pool" 0
+done
 
     change_task_nice "kswapd" "-2"
     change_task_nice "oom_reaper" "-2"
@@ -490,8 +427,6 @@ set_temp_aware_charge() {
 # ============================================================
 # Run functions
 # ============================================================
-disable_thermal_throttling
-# Example usage:
 # set_charge_mode balanced
 # set_charge_mode fast
 # set_temp_aware_charge
