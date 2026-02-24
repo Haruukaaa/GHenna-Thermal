@@ -21,7 +21,7 @@ I really thankfull if you help me support this project.
 But for global like paypal, ko-fi, you can support me too. And for Asian, you can use Trakteer.
 <img align="left" width="100" src="https://github.com/user-attachments/assets/7b903660-2e5c-42e7-b3f5-5f98faaca650">
 
-<img align="middle" width="50" src="https://github.com/user-attachments/assets/bcb9c1f8-b79f-4e50-8603-f205df6bd9c7">[Trakteer](https://trakteer.id/harukaaaaa)
+<img align="middle" width="50" src="https://github.com/user-attachments/assets/bcb9c1f8-b79f-4e50-8603-f205df6bd9c7">[Trakteer](https://trakteer.id/harukiii)
 <img align="middle" width="50" src="https://github.com/user-attachments/assets/02b15456-d726-4b09-9d77-58754e4244fe">[Paypal](https://paypal.me/hiraukiiii)
 <img align="middle" width="50" src="https://github.com/user-attachments/assets/b6d58837-3090-4578-9be8-860e550fd0b3">[Ko-fi](https://Ko-fi.com/hirauki)
 <a/>
