@@ -2,7 +2,7 @@
 # GHenna Ye Shunguang
 wait_until_login() {
   # In case of /data encryption is disabled
-  while [[ "$(getprop sys.boot_completed)" != "1" ]]; do
+    while [ "$(getprop sys.boot_completed)" != "1" ]; do
     sleep 3
   done
 }
@@ -455,7 +455,7 @@ if [ -f /sys/kernel/debug/sched_features ]; then
     echo "ENERGY_AWARE" > /sys/kernel/debug/sched_features 2>/dev/null
 fi
 # Panic Control
-disable_panic_handling()
+disable_panic_handling() {
     # Helper to safely write a value if the file exists
     write_safe() {
         local path="$1"; local val="$2"
@@ -590,19 +590,6 @@ disable_panic_handling()
         # Console suspend
         [ -f /sys/module/printk/parameters/console_suspend ] && echo "1" > /sys/module/printk/parameters/console_suspend 2>/dev/null
     }
-
-    # Panic Control
-    disable_panic_handling() {
-        # Helper to safely write a value if the file exists
-        write_safe() {
-            local path="$1"; local val="$2"
-            if [ -e "$path" ]; then
-                if [ ! -w "$path" ]; then
-                    chmod 0644 "$path" 2>/dev/null || true
-                fi
-                echo "$val" > "$path" 2>/dev/null || true
-            fi
-        }
 
     # Memory Cache and Debug Optimization
     optimize_memory_cache() {
