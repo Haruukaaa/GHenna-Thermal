@@ -1,5 +1,13 @@
 # CL - GHenna Tweaks
 
+
+## R8.0
+- New Release with codename to Ye Shunguang
+- Improvement all source and for all soc (idk with unisoc)
+- Improvement new method charging (i hope so if this gonna work, bcs i didn't test yet)
+- Refine some source and many path
+- Using daemon for base charging limiter
+
 ## R7.0
 - New release with codename to Laevatain
 - Improvement thermal and charging control
