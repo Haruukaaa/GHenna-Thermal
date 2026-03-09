@@ -23,7 +23,7 @@ install_to_dir "$APATCH_PATH"
 print_modname() {
   ui_print "      Welcome to Ghenna Tweaks  ʕ⁠·⁠ᴥ⁠·⁠ʔ     "
   sleep 1
-  ui_print "Codename           : Ye Shunguang               "
+  ui_print "Codename           : Rikuhachima Aru               "
   sleep 1
   ui_print "Created            : Hirauki"
   sleep 1
