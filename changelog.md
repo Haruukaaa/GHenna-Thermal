@@ -1,6 +1,13 @@
 # CL - GHenna Tweaks
 
 
+## R9.0
+-  New release with code to Rikuhachima Aru
+- Drop support for Qualcomm model only and revert to universal for all user CPU
+- Refine some string and some code too
+- Adjustment for kernel stability too
+- Balancing for RAM too
+
 ## R8.0
 - New Release with codename to Ye Shunguang
 - Improvement all source and for all soc (idk with unisoc)
