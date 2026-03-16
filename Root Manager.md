@@ -10,7 +10,7 @@ Please to double check what Root manager base you use currently, but if you faci
 | [KernelSU](https://github.com/tiann/KernelSU)   |  :white_check_mark:               |
 | [KernelSU-Next](https://github.com/KernelSU-Next/KernelSU-Next)   | :white_check_mark: |
 | [SukiSU-Ultra](https://github.com/SukiSU-Ultra/SukiSU-Ultra) | ❓ |
-| [ReSukiSU]([https://github.com/SukiSU-Ultra/SukiSU-Ultra](https://github.com/ReSukiSU/ReSukiSU)) | ❓ |
+| [ReSukiSU](https://github.com/ReSukiSU/ReSukiSU) | ❓ |
 | [KowSU](https://github.com/deepongi-labs/KernelSU-KoWSU) | ❓ |
 | [APatch](https://github.com/bmax121/APatch) | ❓ |
 | [MamboSU](https://t.me/WebsArch/90) | :white_check_mark: |
