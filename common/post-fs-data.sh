@@ -1,10 +1,13 @@
 #!/system/bin/sh
+# Post-fs-data script for Android system optimizations
+# This script applies various system tweaks for performance and logging
 set -e
 MODDIR=${0%/*}
 
 ####################################
-# Helpers
+# Helper Functions
 ####################################
+# Safely write to sysfs nodes
 safe_sys_write() {
     if [ -w "$1" ]; then
         echo "$2" > "$1" 2>/dev/null || true
@@ -12,6 +15,7 @@ safe_sys_write() {
     fi
 }
 
+# Safely set system properties
 safe_resetprop() {
     resetprop -n "$1" "$2" 2>/dev/null || true
     echo "[+] Prop $1 set to $2" >/dev/kmsg 2>/dev/null || true
@@ -20,6 +24,7 @@ safe_resetprop() {
 ####################################
 # ZRAM Configuration
 ####################################
+# Configure ZRAM for compressed RAM swap
 setup_zram() {
     if [ -w /sys/block/zram0/disksize ]; then
         echo 4096M >/sys/block/zram0/disksize || true
@@ -28,15 +33,18 @@ setup_zram() {
             swapon /dev/block/zram0 || true
         fi
         setprop ro.vendor.qti.config.zram true || true
-        echo "[+] ZRAM configured" >/dev/kmsg 2>/dev/null || true
+        echo "[+] ZRAM configured with 4GB" >/dev/kmsg 2>/dev/null || true
+    else
+        echo "[-] ZRAM not available or not writable" >/dev/kmsg 2>/dev/null || true
     fi
 }
 
 ####################################
 # Apply System Properties
 ####################################
+# Apply various system properties for optimization
 apply_props() {
-    # Logging & Debug
+    # Logging & Debug optimizations
     safe_resetprop persist.logd.size 65536
     safe_resetprop persist.logd.size.crash 1M
     safe_resetprop persist.logd.size.radio 1M
@@ -46,14 +54,14 @@ apply_props() {
     safe_resetprop ro.logd.kernel false
     safe_resetprop ro.statsd.enable false
 
-    # Media & Metrics
+    # Media & Metrics disabling for performance
     safe_resetprop media.metrics.enabled false
     safe_resetprop media.stagefright.log-uri 0
 
-    # Networking
+    # Networking optimizations
     safe_resetprop net.ipv4.tcp_no_metrics_save 1
 
-    # Dalvik optimizations
+    # Dalvik VM optimizations
     safe_resetprop persist.sys.dalvik.hyperthreading true
     safe_resetprop persist.sys.dalvik.multithread true
 
@@ -63,6 +71,7 @@ apply_props() {
 ####################################
 # HWUI Performance Profile
 ####################################
+# Apply Hardware UI performance settings
 apply_hwui_performance() {
     safe_resetprop ro.hwui.texture_cache_size 128
     safe_resetprop ro.hwui.layer_cache_size 96
@@ -78,6 +87,10 @@ apply_hwui_performance() {
     echo "[+] HWUI performance profile applied" >/dev/kmsg 2>/dev/null || true
 }
 
+####################################
+# Wait for SurfaceFlinger
+####################################
+# Wait for SurfaceFlinger service to be available and apply HWUI settings
 wait_for_surfaceflinger() {
     (
         for i in $(seq 1 10); do
@@ -89,4 +102,14 @@ wait_for_surfaceflinger() {
         done
     ) &
 }
+
+####################################
+# Main Execution
+####################################
+# Execute the optimization functions
+setup_zram
+apply_props
+wait_for_surfaceflinger
+
+echo "[+] Post-fs-data optimizations completed" >/dev/kmsg 2>/dev/null || true
 
