@@ -1,5 +1,5 @@
 #!/system/bin/sh
-# GHenna Ye Shunguang
+# GHenna Rikuhachima Aru
 wait_until_login() {
   # In case of /data encryption is disabled
     while [ "$(getprop sys.boot_completed)" != "1" ]; do
@@ -7,7 +7,7 @@ wait_until_login() {
   done
 }
     # Send notification about device model
-su -lp 2000 -c "cmd notification post -S bigtext -t 'Ye Shunguang' 'Tag' 'I will be right here waiting.'"
+su -lp 2000 -c "cmd notification post -S bigtext -t 'Rikuhachima Aru' 'Tag' 'Hello. This is Problem Solver 68, Rikuhachima.'"
     sleep 1
 
     # Enhanced Universal Deep Sleep Optimization
@@ -26,52 +26,61 @@ su -lp 2000 -c "cmd notification post -S bigtext -t 'Ye Shunguang' 'Tag' 'I will
             fi
         done
 
-# Reset and enable device idle modes
-dumpsys deviceidle reset >/dev/null 2>&1
-dumpsys deviceidle enable light >/dev/null 2>&1
-dumpsys deviceidle enable deep >/dev/null 2>&1
-dumpsys deviceidle force-idle >/dev/null 2>&1
+        # Deep sleep / Doze optimization (shorter + more robust)
+        deep_sleep_tweaks() {
+            local key val
 
-# Aggressive Doze constants (shorter timers)
-settings put global device_idle_constants \
-    inactive_to=15000,motion_inactive_to=0,min_time_to_alarm=60000,max_idle_pending_time=30000,max_idle_pending_jobs_count=1,wait_for_unlock=true >/dev/null 2>&1
+            # Reset and enable Doze/DeviceIdle
+            for cmd in \
+                "dumpsys deviceidle reset" \
+                "dumpsys deviceidle enable light" \
+                "dumpsys deviceidle enable deep" \
+                "dumpsys deviceidle force-idle"; do
+                $cmd >/dev/null 2>&1 || true
+            done
 
-# Enable low power mode
-settings put global low_power_mode 1 >/dev/null 2>&1
-settings put global low_power_mode_trigger_level 15 >/dev/null 2>&1
-settings put global low_power 1 >/dev/null 2>&1
+            # Aggressive Doze constants
+            settings put global device_idle_constants \
+                inactive_to=15000,motion_inactive_to=0,min_time_to_alarm=60000,max_idle_pending_time=30000,max_idle_pending_jobs_count=1,wait_for_unlock=true >/dev/null 2>&1
 
-# Disable network keep-alives
-settings put global wifi_sleep_policy 2 >/dev/null 2>&1
-settings put global mobile_data_always_on 0 >/dev/null 2>&1
-settings put global wifi_always_on 0 >/dev/null 2>&1
-settings put global background_data 0 >/dev/null 2>&1
-settings put global auto_sync 0 >/dev/null 2>&1
+            # Network / low-power restrictions
+            for kv in \
+                "low_power_mode=1" \
+                "low_power_mode_trigger_level=15" \
+                "low_power=1" \
+                "wifi_sleep_policy=2" \
+                "mobile_data_always_on=0" \
+                "wifi_always_on=0" \
+                "background_data=0" \
+                "auto_sync=0" \
+                "network_scoring_ui_enabled=0" \
+                "airplane_mode_on=1" \
+                "adaptive_battery_management_enabled=0"; do
+                key="${kv%%=*}"
+                val="${kv#*=}"
+                settings put global "$key" "$val" >/dev/null 2>&1
+            done
 
-# Restrict network operations during sleep
-settings put global network_scoring_ui_enabled 0 >/dev/null 2>&1
-settings put global airplane_mode_on 1 >/dev/null 2>&1
+            # Disable location services during sleep
+            settings put secure location_mode 0 >/dev/null 2>&1
 
-# Disable location services during sleep
-settings put secure location_mode 0 >/dev/null 2>&1
-
-# Disable adaptive battery management
-settings put global adaptive_battery_management_enabled 0 >/dev/null 2>&1
-
-# Disable wakelocks
-echo "0" > /sys/power/wake_lock 2>/dev/null || true
-
-# Force battery saver mode
-cmd battery set level 100 >/dev/null 2>&1
-cmd battery unplug >/dev/null 2>&1
-
-# Suspend background jobs
-cmd jobscheduler run -u >/dev/null 2>&1 || true
+            # Disable wakelocks / suspend background jobs
+            echo "0" > /sys/power/wake_lock 2>/dev/null || true
+            cmd jobscheduler run -u >/dev/null 2>&1 || true
+        }
+        deep_sleep_tweaks
 
 # Trim memory caches
 pm trim-caches 999999999 >/dev/null 2>&1
-
 optimize_gms_doze() {
+    # Disable selected GMS components
+    for component in "${gms_components[@]}"; do
+        if su -c "pm disable $component" >/dev/null 2>&1; then
+            echo "    [-] Disabled: $component"
+        else
+            echo "    [!] Failed to disable: $component"
+        fi
+    done
     local gms_pkg="com.google.android.gms"
     local gms_components=(
         "$gms_pkg/.chimera.GmsIntentOperationService"
@@ -87,35 +96,54 @@ optimize_gms_doze() {
         "$gms_pkg/com.google.android.gms.location.service.LocationService"
         "$gms_pkg/com.google.android.gms.location.GeofenceService"
     )
-
-    # Disable selected GMS components
-    for component in "${gms_components[@]}"; do
-        if su -c "pm disable $component" >/dev/null 2>&1; then
-            echo "    [-] Disabled: $component"
-        else
-            echo "    [!] Failed to disable: $component"
-        fi
-    done
-
     # Apply background restrictions
     su -c "pm set-inactive $gms_pkg true" >/dev/null 2>&1
     su -c "cmd appops set $gms_pkg RUN_IN_BACKGROUND ignore" >/dev/null 2>&1
     su -c "cmd appops set $gms_pkg WAKE_LOCK ignore" >/dev/null 2>&1
-
     # Remove from device idle whitelist
     su -c "cmd deviceidle whitelist -$gms_pkg" >/dev/null 2>&1
-
     # Force-stop the package
     su -c "am force-stop $gms_pkg" >/dev/null 2>&1
 }
 
-disable_tracing_and_logging() { cmd accessibility stop-trace 2>/dev/null && cmd migard dump-trace false 2>/dev/null && cmd migard start-trace false 2>/dev/null && cmd migard stop-trace true 2>/dev/null && cmd migard trace-buffer-size 0 2>/dev/null && cmd input_method tracing stop 2>/dev/null && cmd window tracing size 0 2>/dev/null && cmd window tracing stop 2>/dev/null && cmd statusbar tracing stop 2>/dev/null && cmd memory_trace disable 2>/dev/null && cmd animation tracing stop 2>/dev/null && cmd net_utils tracing disable 2>/dev/null && cmd graphics tracing stop 2>/dev/null && cmd package tracing stop 2>/dev/null && cmd wm tracing stop 2>/dev/null && cmd activity tracing stop 2>/dev/null && cmd broadcast tracing disable 2>/dev/null; }
+disable_tracing_and_logging() {
+    local commands=(
+        "accessibility stop-trace"
+        "migard dump-trace false"
+        "migard start-trace false"
+        "migard stop-trace true"
+        "migard trace-buffer-size 0"
+        "input_method tracing stop"
+        "window tracing size 0"
+        "window tracing stop"
+        "statusbar tracing stop"
+        "memory_trace disable"
+        "animation tracing stop"
+        "net_utils tracing disable"
+        "graphics tracing stop"
+        "package tracing stop"
+        "wm tracing stop"
+        "activity tracing stop"
+        "broadcast tracing disable"
+    )
+    for cmd_str in "${commands[@]}"; do
+        cmd $cmd_str 2>/dev/null
+    done
+}
 
-    # Aggressive Logcat Optimization
+    # Aggressive Logcat + Kernel Stability Optimization
     optimize_logcat() {
+        # Safe sysfs/proc writer (best-effort)
+        safe_write() {
+            local path="$1" val="$2"
+            [ -e "$path" ] || return 0
+            [ -w "$path" ] || chmod 0644 "$path" 2>/dev/null || true
+            printf "%s" "$val" > "$path" 2>/dev/null || true
+        }
+
         # Clear all logcat buffers
         logcat -c 2>/dev/null
-        
+
         # Set minimal buffer sizes for all logcat buffers
         logcat -G 16K 2>/dev/null
         logcat -b all -G 16K 2>/dev/null
@@ -124,93 +152,122 @@ disable_tracing_and_logging() { cmd accessibility stop-trace 2>/dev/null && cmd 
         logcat -b events -G 16K 2>/dev/null
         logcat -b crash -G 16K 2>/dev/null
         logcat -b kernel -G 16K 2>/dev/null
-        
+
         # Disable various logging mechanisms
         setprop persist.sys.usb.config adb 2>/dev/null
         setprop ro.logd.size.stats 0 2>/dev/null
         setprop ro.logdumpd.enabled false 2>/dev/null
-        
-        # Disable kernel logging
-        echo "0" > /proc/sys/kernel/printk_ratelimit 2>/dev/null
-        echo "0" > /proc/sys/kernel/sysctl_writes_strict 2>/dev/null
-        
+
+        # Kernel stability: reduce printk noise and disable panic triggers
+        safe_write /proc/sys/kernel/printk_ratelimit 0
+        safe_write /proc/sys/kernel/sysctl_writes_strict 0
+        safe_write /proc/sys/kernel/printk "0 0 0 0"
+        safe_write /proc/sys/kernel/printk_devkmsg "off"
+        safe_write /proc/sys/kernel/panic 0
+        safe_write /proc/sys/kernel/panic_on_oops 0
+        safe_write /proc/sys/kernel/panic_on_warn 0
+        safe_write /proc/sys/kernel/soft_lockup_panic 0
+        safe_write /proc/sys/kernel/hard_lockup_panic 0
+
         # Disable ftrace if available
         if [ -d /sys/kernel/debug/tracing ]; then
-            echo "0" > /sys/kernel/debug/tracing/tracing_on 2>/dev/null
-            echo "nop" > /sys/kernel/debug/tracing/current_tracer 2>/dev/null
-            echo "0" > /sys/kernel/debug/tracing/events/enable 2>/dev/null
+            safe_write /sys/kernel/debug/tracing/tracing_on 0
+            safe_write /sys/kernel/debug/tracing/current_tracer nop
+            safe_write /sys/kernel/debug/tracing/events/enable 0
         fi
-        
+
         # Disable strace
         setprop debug.atrace.tags.enableflags 0 2>/dev/null
-        
+
         # Disable systrace
         setprop debug.force_rtl false 2>/dev/null
-        
+
         # Disable selinux logging
-        echo "0" > /sys/module/selinux/parameters/enforce 2>/dev/null 2>&1 || true
+        safe_write /sys/module/selinux/parameters/enforce 0
     }
 
-    # Enhanced SurfaceFlinger and Graphics Optimization
+    # Enhanced SurfaceFlinger & Graphics Optimization
     optimize_graphics() {
-        # Prioritize SurfaceFlinger for rendering
-        change_task_cgroup "surfaceflinger" "top-app" "cpuset"
-        change_task_cgroup "surfaceflinger" "foreground" "stune"
+        # Safe setter helpers (best-effort)
+        safe_write() {
+            local path="$1" val="$2"
+            [ -e "$path" ] || return 0
+            [ -w "$path" ] || chmod 0644 "$path" 2>/dev/null || true
+            printf "%s" "$val" > "$path" 2>/dev/null || true
+        }
+
+        safe_setprop() {
+            command -v setprop >/dev/null 2>&1 || return 0
+            setprop "$1" "$2" 2>/dev/null || true
+        }
+
+        # Prioritize graphics-critical threads
+        for proc in "surfaceflinger" "android.hardware.graphics.composer" "RenderThread"; do
+            change_task_cgroup "$proc" "top-app" "cpuset"
+            change_task_cgroup "$proc" "foreground" "stune"
+        done
+
         change_task_nice "surfaceflinger" "-20"
         change_task_affinity "surfaceflinger" "ff"
-        
-        # Optimize graphics composer
-        change_task_cgroup "android.hardware.graphics.composer" "top-app" "cpuset"
-        change_task_cgroup "android.hardware.graphics.composer" "foreground" "stune"
         change_task_nice "android.hardware.graphics.composer" "-20"
         change_task_affinity "android.hardware.graphics.composer" "ff"
-        
-        # Optimize render threads
-        change_task_cgroup "RenderThread" "top-app" "cpuset"
         change_task_nice "RenderThread" "-19"
         change_task_affinity "RenderThread" "ff"
-        
+
         # Hardware acceleration properties
-        setprop debug.sf.hw 1
-        setprop debug.sf.latch_unsignaled 1
-        setprop ro.hardware.keystore msm8998
-        
-        # Disable VSync blocking
-        setprop debug.atrace.tags.enableflags 0
-        setprop debug.force_rtl false
-        
+        safe_setprop debug.sf.hw 1
+        safe_setprop debug.sf.latch_unsignaled 1
+        safe_setprop ro.hardware.keystore msm8998
+
+        # Disable VSync blocking / tracing
+        safe_setprop debug.atrace.tags.enableflags 0
+        safe_setprop debug.force_rtl false
+
         # Render performance properties
-        setprop ro.hwui.render_ahead_lines 2
-        setprop ro.hwui.texture_cache_size 72
+        safe_setprop ro.hwui.render_ahead_lines 2
+        safe_setprop ro.hwui.texture_cache_size 72
+
+        # Ensure kernel doesn't log too much during graphics-intensive work
+        safe_write /proc/sys/kernel/printk_ratelimit 0
+        safe_write /proc/sys/kernel/sysctl_writes_strict 0
     }
 
     # Memory and Task Management Optimization
     change_task_affinity() {
         # $1: task_name (pattern)
         # $2: cpu_mask (hex or decimal acceptable for taskset)
-        local name mask ps_ret pid tid
-        name="$1"
-        mask="$2"
-        ps_ret=$(ps -A 2>/dev/null || ps 2>/dev/null)
-
-        echo "$ps_ret" | grep -i -E "$name" | grep -v "PID" | awk '{print $1}' | while read -r pid; do
+        local name="$1" mask="$2" pid tid
+        # Use pgrep for efficient PID lookup (case-insensitive match)
+        for pid in $(pgrep -i "$name" 2>/dev/null); do
             [ -d "/proc/$pid" ] || continue
-
             if command -v taskset >/dev/null 2>&1; then
-                # Prefer taskset when available (works on both pid and tid)
+                # Set affinity for main process
                 taskset -p "$mask" "$pid" 2>/dev/null || true
-                for tid in $(ls "/proc/$pid/task/" 2>/dev/null); do
+                # Set affinity for all threads
+                for tid in /proc/$pid/task/*; do
+                    [ -d "$tid" ] || continue
+                    tid=${tid##*/}
                     taskset -p "$mask" "$tid" 2>/dev/null || true
                 done
             else
-                # Fallback: if cpuset exists, try to move threads into top-app (best-effort)
-                for tid in $(ls "/proc/$pid/task/" 2>/dev/null); do
+                # Fallback: move threads to top-app cpuset
+                for tid in /proc/$pid/task/*; do
+                    [ -d "$tid" ] || continue
+                    tid=${tid##*/}
                     if [ -w "/dev/cpuset/top-app/tasks" ]; then
                         echo "$tid" > "/dev/cpuset/top-app/tasks" 2>/dev/null || true
                     fi
                 done
             fi
         done
+            optimize_memory_management()
+        # Define safe write helper locally if not in scope
+        safe_sys_write()
+            local path="$1" val="$2"
+            if [ -e "$path" ]; then
+                [ -w "$path" ] || chmod 0644 "$path" 2>/dev/null || true
+                printf "%s" "$val" > "$path" 2>/dev/null || true
+        safe_sys_write /proc/sys/vm/compact_unevictable_allowed 1
     }
 
     change_task_cgroup() {
@@ -254,17 +311,7 @@ disable_tracing_and_logging() { cmd accessibility stop-trace 2>/dev/null && cmd 
         done
     }
 
-    optimize_memory_management() {
-        # Define safe write helper locally if not in scope
-        safe_sys_write() {
-            local path="$1" val="$2"
-            if [ -e "$path" ]; then
-                [ -w "$path" ] || chmod 0644 "$path" 2>/dev/null || true
-                printf "%s" "$val" > "$path" 2>/dev/null || true
-            fi
-        }
-
-# Check for LMKD daemon (Android 11+)
+# Check for LMKD daemon (Android 11+) and monitor RAM levels
 check_lmkd() {
     if pidof lmkd >/dev/null 2>&1; then
         echo "[+] LMKD detected: modern low memory killer active" \
@@ -283,6 +330,26 @@ check_lmkd() {
     else
         echo "[!] LMKD not detected; device may use legacy lowmemorykiller" \
             >/dev/kmsg 2>/dev/null || echo "[!] LMKD not detected"
+    fi
+
+    # Monitor available RAM and trigger cleanup if low
+    local meminfo avail_kb threshold_kb=262144  # 256MB threshold
+    if [ -r /proc/meminfo ]; then
+        avail_kb=$(awk '/MemAvailable:/ {print $2}' /proc/meminfo 2>/dev/null)
+        if [ -n "$avail_kb" ] && [ "$avail_kb" -lt "$threshold_kb" ]; then
+            echo "[!] Low RAM detected: ${avail_kb}KB available, triggering memory cleanup" \
+                >/dev/kmsg 2>/dev/null || echo "[!] Low RAM detected: ${avail_kb}KB available"
+            
+            # Trigger memory cleanup
+            pm trim-caches 999999999 >/dev/null 2>&1
+            echo 3 > /proc/sys/vm/drop_caches 2>/dev/null || true
+            echo 1 > /proc/sys/vm/compact_memory 2>/dev/null || true
+            
+            # Force GC in system processes if possible
+            am broadcast -a android.intent.action.GC >/dev/null 2>&1 || true
+        else
+            echo "[+] RAM OK: ${avail_kb}KB available" >/dev/kmsg 2>/dev/null || true
+        fi
     fi
 }
 
@@ -340,9 +407,6 @@ done
         echo "1000000" > "$h/sched_rt_period_us" 2>/dev/null
     done
 
-    # Universal Thermal Throttling Disable (works on all SOCs)
-    # Thermal Throttling: relax non-battery-related thermal controls safely
-    # Service Script: Thermal Throttling Relaxation + Charging Profiles + Temp-Aware Charging
 disable_thermal_throttling() {
     local tz type cd_type
 
@@ -423,7 +487,6 @@ set_temp_aware_charge() {
         fi
     fi
 }
-
 # ============================================================
 # Run functions
 # ============================================================
@@ -431,6 +494,10 @@ set_temp_aware_charge() {
 # set_charge_mode fast
 # set_temp_aware_charge
  # Do NOT modify battery charging or FCC limits — leave battery/charging controls alone
+    # Universal Thermal Throttling Disable (works on all SOCs)
+    # Thermal Throttling: relax non-battery-related thermal controls safely
+    # Service Script: Thermal Throttling Relaxation + Charging Profiles + Temp-Aware Charging
+
 
 # RCU and Kernel Optimization
 echo "1" > /sys/kernel/rcu_normal 2>/dev/null  # Enable normal RCU for stability
@@ -509,6 +576,32 @@ disable_panic_handling() {
             [ -d "$devpath" ] || continue
             dev="$(basename "$devpath")"
             safe_sys_write "/sys/block/${dev}/queue/iostats" "0"
+
+            # Enhanced I/O optimizations
+            # Set I/O scheduler to bfq if available, else noop for SSD-like performance
+            if [ -f "/sys/block/${dev}/queue/scheduler" ]; then
+                if grep -q "bfq" "/sys/block/${dev}/queue/scheduler" 2>/dev/null; then
+                    echo "bfq" > "/sys/block/${dev}/queue/scheduler" 2>/dev/null || true
+                elif grep -q "noop" "/sys/block/${dev}/queue/scheduler" 2>/dev/null; then
+                    echo "noop" > "/sys/block/${dev}/queue/scheduler" 2>/dev/null || true
+                fi
+            fi
+
+            # Increase read-ahead for better sequential I/O
+            safe_sys_write "/sys/block/${dev}/queue/read_ahead_kb" "2048"
+
+            # Optimize queue depth
+            safe_sys_write "/sys/block/${dev}/queue/nr_requests" "128"
+
+            # Disable entropy contribution from I/O for performance
+            safe_sys_write "/sys/block/${dev}/queue/add_random" "0"
+
+            # Assume SSD (rotational=0) for modern devices
+            safe_sys_write "/sys/block/${dev}/queue/rotational" "0"
+
+            # Reduce I/O latency
+            safe_sys_write "/sys/block/${dev}/queue/iosched/slice_idle" "0"
+            safe_sys_write "/sys/block/${dev}/queue/iosched/group_idle" "1"
         done
 
         # Scheduler and VM tuning (safe writes)
@@ -650,5 +743,5 @@ disable_gpu_debug() {
         echo "0" > /sys/kernel/debug/tracing/events/sde/enable 2>/dev/null
     fi
 }
-su -lp 2000 -c "cmd notification post -S bigtext -t 'Ye Shunguang' 'Tag' ' Whenever you need me.'"
+su -lp 2000 -c "cmd notification post -S bigtext -t 'Rikuhachima Aru' 'Tag' 'Oh, yes. That's been confirmed.'"
     exit 0
