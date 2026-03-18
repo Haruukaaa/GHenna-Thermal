@@ -1,14 +1,13 @@
 #!/system/bin/sh
 # GHenna Rikuhachima Aru
-wait_until_login() {
-  # In case of /data encryption is disabled
-    while [ "$(getprop sys.boot_completed)" != "1" ]; do
-    sleep 3
-  done
-}
-    # Send notification about device model
-su -lp 2000 -c "cmd notification post -S bigtext -t 'Rikuhachima Aru' 'Tag' 'Hello. This is Problem Solver 68, Rikuhachima.'"
-    sleep 1
+while [ "$(getprop sys.boot_completed)" != "1" ]; do
+    sleep 2
+done
+
+sleep 5
+
+# Send notification about device model
+su -lp 2000 -c "cmd notification post -S bigtext -t 'Rikuhachima Aru' com.android.shell Tag 'Hello. This is Problem Solver 68, Rikuhachima.'"
 
     # Enhanced Universal Deep Sleep Optimization
     optimize_deep_sleep() {
@@ -532,7 +531,7 @@ disable_panic_handling() {
             fi
             echo "$val" > "$path" 2>/dev/null || true
         fi
-    }
+        }
 
     # Explicit common panic knobs
     write_safe /proc/sys/kernel/panic 0
@@ -602,7 +601,7 @@ disable_panic_handling() {
             # Reduce I/O latency
             safe_sys_write "/sys/block/${dev}/queue/iosched/slice_idle" "0"
             safe_sys_write "/sys/block/${dev}/queue/iosched/group_idle" "1"
-        done
+         done
 
         # Scheduler and VM tuning (safe writes)
         safe_sys_write /proc/sys/kernel/sched_energy_aware 1
@@ -653,35 +652,19 @@ disable_panic_handling() {
 
     # Kernel Logging Optimization
     optimize_kernel_logging() {
-        # Printk levels (emergency, alert, crit, err)
-        [ -f /proc/sys/kernel/printk ] && echo "0 0 0 0" > /proc/sys/kernel/printk 2>/dev/null
-        
-        # Printk device messages
-        [ -f /proc/sys/kernel/printk_devkmsg ] && echo "off" > /proc/sys/kernel/printk_devkmsg 2>/dev/null
-        
-        # Printk PID logging
-        [ -f /sys/module/printk/parameters/pid ] && echo "0" > /sys/module/printk/parameters/pid 2>/dev/null
-        
-        # Printk CPU logging
-        [ -f /sys/module/printk/parameters/cpu ] && echo "0" > /sys/module/printk/parameters/cpu 2>/dev/null
-        
-        # Printk timestamp logging
-        [ -f /sys/module/printk/parameters/time ] && echo "0" > /sys/module/printk/parameters/time 2>/dev/null
-        
-        # Printk mode
-        [ -f /sys/kernel/printk_mode/printk_mode ] && echo "0" > /sys/kernel/printk_mode/printk_mode 2>/dev/null
-        
-        # Filesystem sync
-        [ -f /sys/module/sync/parameters/fsync_enabled ] && echo "N" > /sys/module/sync/parameters/fsync_enabled 2>/dev/null
-        
-        # Ignore loglevel
-        [ -f /sys/module/printk/parameters/ignore_loglevel ] && echo "1" > /sys/module/printk/parameters/ignore_loglevel 2>/dev/null
-        
-        # Printk rate limiting
-        [ -f /sys/module/printk/parameters/printk_ratelimit ] && echo "0" > /sys/module/printk/parameters/printk_ratelimit 2>/dev/null
-        
-        # Console suspend
-        [ -f /sys/module/printk/parameters/console_suspend ] && echo "1" > /sys/module/printk/parameters/console_suspend 2>/dev/null
+        safe_write() {
+            [ -f "$1" ] && echo "$2" > "$1" 2>/dev/null
+        }
+        safe_write /proc/sys/kernel/printk "0 0 0 0"
+        safe_write /proc/sys/kernel/printk_devkmsg "off"
+        safe_write /sys/module/printk/parameters/pid "0"
+        safe_write /sys/module/printk/parameters/cpu "0"
+        safe_write /sys/module/printk/parameters/time "0"
+        safe_write /sys/kernel/printk_mode/printk_mode "0"
+        safe_write /sys/module/sync/parameters/fsync_enabled "N"
+        safe_write /sys/module/printk/parameters/ignore_loglevel "1"
+        safe_write /sys/module/printk/parameters/printk_ratelimit "0"
+        safe_write /sys/module/printk/parameters/console_suspend "1"
     }
 
     # Memory Cache and Debug Optimization
@@ -743,5 +726,6 @@ disable_gpu_debug() {
         echo "0" > /sys/kernel/debug/tracing/events/sde/enable 2>/dev/null
     fi
 }
-su -lp 2000 -c "cmd notification post -S bigtext -t 'Rikuhachima Aru' 'Tag' 'Oh, yes. That's been confirmed.'"
+
+su -lp 2000 -c "cmd notification post -S bigtext -t 'Rikuhachima Aru' com.android.shell Tag 'Hello. This is Problem Solver 68, Rikuhachima.'"
     exit 0
