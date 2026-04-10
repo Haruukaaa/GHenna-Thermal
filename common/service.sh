@@ -441,19 +441,44 @@ set_charge_limit() {
     fi
 }
 
+get_device_max_charge_limit() {
+    local path="/sys/class/power_supply/battery/constant_charge_current_max"
+    local limit_ma=6000
+    local raw
+
+    if [ -r "$path" ]; then
+        raw=$(cat "$path" 2>/dev/null || echo "")
+        case "$raw" in
+            ''|*[!0-9]*)
+                ;;
+            *)
+                raw=$((raw / 1000))
+                if [ "$raw" -gt "$limit_ma" ]; then
+                    limit_ma="$raw"
+                fi
+                ;;
+        esac
+    fi
+
+    printf '%s' "$limit_ma"
+}
+
 # ============================================================
 # Charging Mode Selector
 # ============================================================
 set_charge_mode() {
     local mode=$1
+    local max_limit
+
     case "$mode" in
         balanced)
             set_charge_limit 3000   # ~33W
             echo "Charging mode set to BALANCED (~33W)"
             ;;
         fast)
-            set_charge_limit 6000   # ~67W
-            echo "Charging mode set to FAST (~67W)"
+            max_limit=$(get_device_max_charge_limit)
+            set_charge_limit "$max_limit"
+            echo "Charging mode set to FAST (~${max_limit}mA)"
             ;;
         *)
             echo "Unknown mode: $mode"
@@ -467,24 +492,32 @@ set_charge_mode() {
 # ============================================================
 set_temp_aware_charge() {
     local temp_path="/sys/class/power_supply/battery/temp"
-    local temp_raw temp_c
+    local temp_raw temp_c max_limit
 
     if [ -r "$temp_path" ]; then
-        temp_raw=$(cat "$temp_path")
-        temp_c=$((temp_raw / 10))   # convert to °C
+        temp_raw=$(cat "$temp_path" 2>/dev/null || echo "")
+        case "$temp_raw" in
+            ''|*[!0-9]*)
+                echo "Battery temp unreadable: '$temp_raw'"
+                return 1
+                ;;
+        esac
 
-        if [ "$temp_c" -ge 45 ]; then
-            # High temp → force balanced mode
-            set_charge_limit 3000
-            echo "Battery temp ${temp_c}°C: limiting to BALANCED (~33W)"
-        elif [ "$temp_c" -ge 40 ]; then
-            # Moderate temp → reduce fast mode slightly
+        temp_c=$((temp_raw / 10))   # convert to °C
+        max_limit=$(get_device_max_charge_limit)
+
+        if [ "$temp_c" -ge 60 ]; then
+            set_charge_limit 0
+            echo "Battery temp ${temp_c}°C: charging disabled"
+        elif [ "$temp_c" -ge 50 ]; then
+            set_charge_limit 4000
+            echo "Battery temp ${temp_c}°C: reduced to ~18W"
+        elif [ "$temp_c" -ge 45 ]; then
             set_charge_limit 4500
-            echo "Battery temp ${temp_c}°C: limiting to ~45W"
+            echo "Battery temp ${temp_c}°C: reduced to ~45W"
         else
-            # Normal temp → allow fast mode
-            set_charge_limit 6000
-            echo "Battery temp ${temp_c}°C: allowing FAST (~67W)"
+            set_charge_limit "$max_limit"
+            echo "Battery temp ${temp_c}°C: allowing device max fast charge (~${max_limit}mA)"
         fi
     fi
 }
