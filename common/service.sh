@@ -1,5 +1,5 @@
 #!/system/bin/sh
-# GHenna Rikuhachima Aru
+# GHenna Angela
 while [ "$(getprop sys.boot_completed)" != "1" ]; do
     sleep 2
 done
@@ -7,10 +7,18 @@ done
 sleep 5
 
 # Send notification about device model
-su -lp 2000 -c "cmd notification post -S bigtext -t 'Rikuhachima Aru' com.android.shell Tag 'Hello. This is Problem Solver 68, Rikuhachima.'"
+su -lp 2000 -c "cmd notification post -S bigtext -t 'Angela' Tag 'I can do all the chores!'"
 
-    # Enhanced Universal Deep Sleep Optimization
-    optimize_deep_sleep() {
+safe_sys_write() {
+    local path="$1" val="$2"
+    if [ -e "$path" ]; then
+        [ -w "$path" ] || chmod 0644 "$path" 2>/dev/null || true
+        printf "%s" "$val" > "$path" 2>/dev/null || true
+    fi
+}
+
+# Enhanced Universal Deep Sleep Optimization
+optimize_deep_sleep() {
         # Clean up logs
         rm -f /storage/emulated/0/*.log 2>/dev/null
         rm -f /data/log/*.log 2>/dev/null
@@ -68,6 +76,7 @@ su -lp 2000 -c "cmd notification post -S bigtext -t 'Rikuhachima Aru' com.androi
             cmd jobscheduler run -u >/dev/null 2>&1 || true
         }
         deep_sleep_tweaks
+    }
 
 # Trim memory caches
 pm trim-caches 999999999 >/dev/null 2>&1
@@ -259,13 +268,6 @@ disable_tracing_and_logging() {
                 done
             fi
         done
-            optimize_memory_management()
-        # Define safe write helper locally if not in scope
-        safe_sys_write()
-            local path="$1" val="$2"
-            if [ -e "$path" ]; then
-                [ -w "$path" ] || chmod 0644 "$path" 2>/dev/null || true
-                printf "%s" "$val" > "$path" 2>/dev/null || true
         safe_sys_write /proc/sys/vm/compact_unevictable_allowed 1
     }
 
@@ -486,17 +488,6 @@ set_temp_aware_charge() {
         fi
     fi
 }
-# ============================================================
-# Run functions
-# ============================================================
-# set_charge_mode balanced
-# set_charge_mode fast
-# set_temp_aware_charge
- # Do NOT modify battery charging or FCC limits — leave battery/charging controls alone
-    # Universal Thermal Throttling Disable (works on all SOCs)
-    # Thermal Throttling: relax non-battery-related thermal controls safely
-    # Service Script: Thermal Throttling Relaxation + Charging Profiles + Temp-Aware Charging
-
 
 # RCU and Kernel Optimization
 echo "1" > /sys/kernel/rcu_normal 2>/dev/null  # Enable normal RCU for stability
@@ -727,5 +718,111 @@ disable_gpu_debug() {
     fi
 }
 
-su -lp 2000 -c "cmd notification post -S bigtext -t 'Rikuhachima Aru' com.android.shell Tag 'Hello. This is Problem Solver 68, Rikuhachima.'"
-    exit 0
+configure_common_tweaks() {
+    optimize_logcat
+    disable_tracing_and_logging
+    optimize_graphics
+    optimize_module_params
+    optimize_kernel_logging
+    optimize_memory_cache
+    disable_gpu_debug
+    tune_io_scheduler
+    tune_kernel_stability
+    optimize_deep_sleep
+    optimize_gms_doze
+}
+
+tune_io_scheduler() {
+    local dev
+    for dev in /sys/block/*; do
+        [ -d "$dev" ] || continue
+        if [ -f "$dev/queue/scheduler" ]; then
+            if grep -q "bfq" "$dev/queue/scheduler" 2>/dev/null; then
+                echo "bfq" > "$dev/queue/scheduler" 2>/dev/null || true
+            elif grep -q "mq-deadline" "$dev/queue/scheduler" 2>/dev/null; then
+                echo "mq-deadline" > "$dev/queue/scheduler" 2>/dev/null || true
+            elif grep -q "noop" "$dev/queue/scheduler" 2>/dev/null; then
+                echo "noop" > "$dev/queue/scheduler" 2>/dev/null || true
+            fi
+        fi
+        safe_sys_write "$dev/queue/read_ahead_kb" 1024
+        safe_sys_write "$dev/queue/nr_requests" 128
+        safe_sys_write "$dev/queue/add_random" 0
+        safe_sys_write "$dev/queue/rotational" 0
+        safe_sys_write "$dev/queue/iosched/slice_idle" 0
+        safe_sys_write "$dev/queue/iosched/group_idle" 1
+    done
+}
+
+tune_kernel_stability() {
+    safe_sys_write /proc/sys/kernel/sched_tunable_scaling 0
+    safe_sys_write /proc/sys/kernel/sched_migration_cost_ns 50000
+    safe_sys_write /proc/sys/kernel/sched_autogroup_enabled 0
+    safe_sys_write /proc/sys/kernel/perf_cpu_time_max_percent 3
+    safe_sys_write /proc/sys/kernel/sched_min_granularity_ns 1000000
+    safe_sys_write /proc/sys/kernel/sched_wakeup_granularity_ns 1500000
+    safe_sys_write /proc/sys/kernel/oom_kill_allocating_task 1
+    safe_sys_write /proc/sys/kernel/panic 0
+    safe_sys_write /proc/sys/kernel/panic_on_oops 0
+    safe_sys_write /proc/sys/kernel/panic_on_warn 0
+    safe_sys_write /proc/sys/kernel/soft_lockup_panic 0
+    safe_sys_write /proc/sys/kernel/hard_lockup_panic 0
+}
+
+boost_game_processes() {
+    local proc
+    for proc in "surfaceflinger" "android.hardware.graphics.composer" "RenderThread" "audioserver" "system_server"; do
+        change_task_nice "$proc" "-10"
+        change_task_affinity "$proc" "ff"
+    done
+}
+
+apply_daily_tweaks() {
+    safe_sys_write /proc/sys/vm/swappiness 60
+    safe_sys_write /proc/sys/vm/vfs_cache_pressure 100
+    safe_sys_write /proc/sys/vm/dirty_ratio 15
+    safe_sys_write /proc/sys/vm/dirty_background_ratio 5
+    settings put global low_power_mode 1 >/dev/null 2>&1
+    settings put global wifi_sleep_policy 2 >/dev/null 2>&1
+    settings put global mobile_data_always_on 0 >/dev/null 2>&1
+    settings put global wifi_always_on 0 >/dev/null 2>&1
+    settings put global background_data 0 >/dev/null 2>&1
+    settings put global auto_sync 0 >/dev/null 2>&1
+    boost_game_processes
+}
+
+apply_gaming_tweaks() {
+    safe_sys_write /proc/sys/vm/swappiness 20
+    safe_sys_write /proc/sys/vm/dirty_ratio 10
+    safe_sys_write /proc/sys/vm/dirty_background_ratio 5
+    settings put global low_power_mode 0 >/dev/null 2>&1
+    settings put global wifi_sleep_policy 0 >/dev/null 2>&1
+    settings put global mobile_data_always_on 1 >/dev/null 2>&1
+    settings put global wifi_always_on 1 >/dev/null 2>&1
+    settings put global background_data 1 >/dev/null 2>&1
+    boost_game_processes
+}
+
+apply_battery_tweaks() {
+    safe_sys_write /proc/sys/vm/swappiness 80
+    safe_sys_write /proc/sys/vm/vfs_cache_pressure 200
+    safe_sys_write /proc/sys/vm/dirty_ratio 15
+    safe_sys_write /proc/sys/vm/dirty_background_ratio 5
+    settings put global low_power_mode 1 >/dev/null 2>&1
+    settings put global wifi_sleep_policy 2 >/dev/null 2>&1
+    settings put global mobile_data_always_on 0 >/dev/null 2>&1
+    settings put global wifi_always_on 0 >/dev/null 2>&1
+    settings put global background_data 0 >/dev/null 2>&1
+    settings put global auto_sync 0 >/dev/null 2>&1
+    disable_tracing_and_logging
+    pm trim-caches 999999999 >/dev/null 2>&1
+}
+
+main() {
+    configure_common_tweaks
+    apply_mode_tweaks
+    su -lp 2000 -c "cmd notification post -S bigtext -t 'Angela' Tag 'Ulalaaaa... I got your back!'"
+}
+
+main "$@"
+exit 0
