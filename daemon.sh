@@ -27,15 +27,18 @@ while true; do
 
         temp_c=$((temp_raw / 10))  # convert tenths °C -> °C
 
-        if [ "$temp_c" -ge 45 ]; then
-            current_mA=3000
-            note="~33W (approx)"
-        elif [ "$temp_c" -ge 40 ]; then
+        if [ "$temp_c" -ge 60 ]; then
+            current_mA=0
+            note="charging disabled"
+        elif [ "$temp_c" -ge 50 ]; then
+            current_mA=4000
+            note="~18W (approx)"
+        elif [ "$temp_c" -ge 45 ]; then
             current_mA=4500
             note="~45W (approx)"
         else
-            current_mA=6000
-            note="~67W (approx)"
+            current_mA=9000
+            note="high-speed charging (cool condition)"
         fi
 
         current_uA=$((current_mA * 1000))
