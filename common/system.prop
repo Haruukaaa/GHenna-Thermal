@@ -1,43 +1,32 @@
-# Quick Boot
+# QuickPower
 ro.config.hw_quickpoweron=true
 
-# GPU & HWUI
-hw3d.force=1
-persist.sys.ui.hw=1
-persist.service.gfx.gpu_rendering_priority=1
-ro.config.enable.hw_accel=true
-video.accelerate.hw=1
-debug.hwui.app_memory_policy=balanced
-debug.hwui.optimized_texture_upload=true
-debug.hwui.use_gpu_pixel_buffers=1
-ro.hwui.expensive_rendering_threshold=10000
-
 # Texture Cache
-ro.hwui.texture_cache_flushrate=0.5
-ro.texture_atlas_cache_override=0.3
+ro.hwui.texture_cache_flushrate=0.6
+ro.texture_atlas_cache_override=0.25
 
-# Anti-Aliasing
+# Disable MSAA
 debug.egl.disable_msaa=true
 
 # Memory Optimization
 ro.vendor.qti.sys.fw.bservice_enable=true
 ro.vendor.qti.sys.fw.bservice_limit=256
-ro.vendor.qti.sys.fw.bservice_age=12000
-ro.vendor.qti.sys.fw.bg_apps_limit=200
+ro.vendor.qti.sys.fw.bservice_age=15000
+ro.vendor.qti.sys.fw.bg_apps_limit=256
 persist.sys.purgeable_assets=1
 
-# Doze (Battery Saving)
+# Doze
 doze.display.supported=true
 doze.pulse.notifications=true
-doze.pulse.delay.in=400
-doze.pulse.duration.in=800
-doze.pulse.duration.out=800
-doze.pulse.duration.visible=2500
+doze.pulse.delay.in=500
+doze.pulse.duration.in=1000
+doze.pulse.duration.out=1000
+doze.pulse.duration.visible=3000
 
 # Input & Touch
-windowsmgr.max_events_per_sec=120
-view.scroll_friction=0.007
-ro.max.fling_velocity=22000
+windowsmgr.max_events_per_sec=100
+view.scroll_friction=0.008
+ro.max.fling_velocity=20000
 
 # Zygote & Fast Launch
 persist.device_config.runtime_native.usap_pool_enabled=true
@@ -55,5 +44,5 @@ dalvik.vm.usejit=true
 dalvik.vm.dex2oat-filter=speed
 
 # Network
-net.dns1=8.8.8.8
-net.dns2=8.8.4.4
+net.dns1=1.1.1.1
+net.dns2=1.0.0.1
