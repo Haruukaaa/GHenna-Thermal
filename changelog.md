@@ -1,5 +1,13 @@
 # CL - GHenna Tweaks
 
+## R10.0
+-  New release with code to Project Angela
+- Balancing some tweaks for kernel and CPU
+- Adjustment LMKD and RAM management for better daily usage
+- Adding tweaks for I/O for daily usage
+- Add thermal off and thermal trhottling while charging
+- Add Charging cut while getting higher temp
+- Replacement `daemon.sh` path and code for make following base charging itself on device
 
 ## R9.0
 -  New release with code to Rikuhachima Aru
