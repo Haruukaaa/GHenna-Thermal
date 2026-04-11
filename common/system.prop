@@ -5,15 +5,11 @@ ro.config.hw_quickpoweron=true
 ro.hwui.texture_cache_flushrate=0.6
 ro.texture_atlas_cache_override=0.25
 
-# Disable MSAA
-debug.egl.disable_msaa=true
-
 # Memory Optimization
 ro.vendor.qti.sys.fw.bservice_enable=true
-ro.vendor.qti.sys.fw.bservice_limit=256
+ro.vendor.qti.sys.fw.bservice_limit=60
 ro.vendor.qti.sys.fw.bservice_age=15000
 ro.vendor.qti.sys.fw.bg_apps_limit=256
-persist.sys.purgeable_assets=1
 
 # Doze
 doze.display.supported=true
@@ -24,9 +20,9 @@ doze.pulse.duration.out=1000
 doze.pulse.duration.visible=3000
 
 # Input & Touch
-windowsmgr.max_events_per_sec=100
+windowsmgr.max_events_per_sec=300
 view.scroll_friction=0.008
-ro.max.fling_velocity=20000
+ro.max.fling_velocity=12000
 
 # Zygote & Fast Launch
 persist.device_config.runtime_native.usap_pool_enabled=true
@@ -41,8 +37,4 @@ ro.hwui.use_skiaglthreaded=true
 # Thermal & Battery
 persist.sys.thermal.enable=true
 dalvik.vm.usejit=true
-dalvik.vm.dex2oat-filter=speed
-
-# Network
-net.dns1=1.1.1.1
-net.dns2=1.0.0.1
+dalvik.vm.dex2oat-filter=speed-profile
