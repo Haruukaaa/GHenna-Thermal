@@ -75,7 +75,6 @@ optimize_deep_sleep() {
             echo "0" > /sys/power/wake_lock 2>/dev/null || true
             cmd jobscheduler run -u >/dev/null 2>&1 || true
         }
-        deep_sleep_tweaks
     }
 
 # Trim memory caches
@@ -225,8 +224,8 @@ disable_tracing_and_logging() {
         # Hardware acceleration properties
         safe_setprop debug.sf.hw 1
         safe_setprop debug.sf.latch_unsignaled 1
-        safe_setprop ro.hardware.keystore msm8998
-
+        safe_setprop debug.sf.disable_backpressure 1
+        
         # Disable VSync blocking / tracing
         safe_setprop debug.atrace.tags.enableflags 0
         safe_setprop debug.force_rtl false
@@ -312,14 +311,33 @@ disable_tracing_and_logging() {
         done
     }
 
+kill_memory_hogs() {
+    local proc pid
+    for proc in \
+        "com.google.android.gms" \
+        "com.android.chrome" \
+        "com.instagram.android" \
+        "com.twitter.android" \
+        "com.facebook.katana"; do
+        if pidof "$proc" >/dev/null 2>/dev/null 2>&1; then
+            echo "[!] High-RAM condition: stopping $proc" >/dev/kmsg 2>/dev/null || echo "[!] High-RAM condition: stopping $proc"
+            am force-stop "$proc" >/dev/null 2>&1 || true
+        fi
+        for pid in $(pidof "$proc" 2>/dev/null); do
+            [ -n "$pid" ] && kill -9 "$pid" >/dev/null 2>&1 || true
+        done
+    done
+}
+
 # Check for LMKD daemon (Android 11+) and monitor RAM levels
 check_lmkd() {
+    local lmkd_pid ram_total_kb avail_kb used_kb used_pct threshold_kb=262144 threshold_pct=70
+
     if pidof lmkd >/dev/null 2>&1; then
         echo "[+] LMKD detected: modern low memory killer active" \
             >/dev/kmsg 2>/dev/null || echo "[+] LMKD detected"
         
         # Optional: show LMKD process info
-        local lmkd_pid
         lmkd_pid=$(pidof lmkd)
         echo "    [-] LMKD PID: $lmkd_pid"
         
@@ -333,34 +351,29 @@ check_lmkd() {
             >/dev/kmsg 2>/dev/null || echo "[!] LMKD not detected"
     fi
 
-    # Monitor available RAM and trigger cleanup if low
-    local meminfo avail_kb threshold_kb=262144  # 256MB threshold
+    # Monitor available RAM and trigger cleanup if low or if RAM usage is high
     if [ -r /proc/meminfo ]; then
+        ram_total_kb=$(awk '/MemTotal:/ {print $2}' /proc/meminfo 2>/dev/null)
         avail_kb=$(awk '/MemAvailable:/ {print $2}' /proc/meminfo 2>/dev/null)
-        if [ -n "$avail_kb" ] && [ "$avail_kb" -lt "$threshold_kb" ]; then
-            echo "[!] Low RAM detected: ${avail_kb}KB available, triggering memory cleanup" \
-                >/dev/kmsg 2>/dev/null || echo "[!] Low RAM detected: ${avail_kb}KB available"
-            
-            # Trigger memory cleanup
-            pm trim-caches 999999999 >/dev/null 2>&1
-            echo 3 > /proc/sys/vm/drop_caches 2>/dev/null || true
-            echo 1 > /proc/sys/vm/compact_memory 2>/dev/null || true
-            
-            # Force GC in system processes if possible
-            am broadcast -a android.intent.action.GC >/dev/null 2>&1 || true
-        else
-            echo "[+] RAM OK: ${avail_kb}KB available" >/dev/kmsg 2>/dev/null || true
+
+        if [ -n "$ram_total_kb" ] && [ -n "$avail_kb" ] && [ "$ram_total_kb" -gt 0 ]; then
+            used_kb=$((ram_total_kb - avail_kb))
+            used_pct=$((used_kb * 100 / ram_total_kb))
+            if [ "$used_pct" -ge "$threshold_pct" ] || [ "$avail_kb" -lt "$threshold_kb" ]; then
+                echo "[!] High RAM usage detected: ${used_pct}% used, ${avail_kb}KB available" \
+                    >/dev/kmsg 2>/dev/null || echo "[!] High RAM usage detected: ${used_pct}% used, ${avail_kb}KB available"
+                
+                pm trim-caches 999999999 >/dev/null 2>&1
+                echo 3 > /proc/sys/vm/drop_caches 2>/dev/null || true
+                echo 1 > /proc/sys/vm/compact_memory 2>/dev/null || true
+                am broadcast -a android.intent.action.GC >/dev/null 2>&1 || true
+                kill_memory_hogs
+            else
+                echo "[+] RAM OK: ${used_pct}% used, ${avail_kb}KB available" >/dev/kmsg 2>/dev/null || true
+            fi
         fi
     fi
 }
-
-# Optimize kernel memory daemons
-change_task_nice "kswapd" "-15"
-change_task_affinity "kswapd" "0f"
-change_task_nice "oom_reaper" "-15"
-change_task_affinity "oom_reaper" "0f"
-change_task_nice "kcompactd" "-10"
-change_task_nice "writeback" "-10"
 
 # Memory tuning parameters
 safe_sys_write /proc/sys/vm/watermark_scale_factor 1
@@ -380,10 +393,10 @@ for pool in /sys/module/*/parameters/mempools; do
     [ -f "$pool" ] && safe_sys_write "$pool" 0
 done
 
-    change_task_nice "kswapd" "-2"
-    change_task_nice "oom_reaper" "-2"
-    change_task_affinity "kswapd" "7f"
-    change_task_affinity "oom_reaper" "7f"
+    change_task_nice "kswapd" "0"
+    change_task_nice "oom_reaper" "-5"
+    change_task_affinity "kswapd" "0f"
+    change_task_affinity "oom_reaper" "0f"
     for queue in /sys/block/*/queue; do
         echo "0" > "$queue/iostats" 2>/dev/null
     done
@@ -523,16 +536,16 @@ set_temp_aware_charge() {
 }
 
 # RCU and Kernel Optimization
-echo "1" > /sys/kernel/rcu_normal 2>/dev/null  # Enable normal RCU for stability
-echo "0" > /sys/kernel/rcu_expedited 2>/dev/null  # Keep expedited off for performance
+echo "1" > /sys/kernel/rcu_normal 2>/dev/null
+echo "0" > /sys/kernel/rcu_expedited 2>/dev/null
 echo "1" > /proc/sys/kernel/timer_migration 2>/dev/null
 echo "0" > /sys/devices/system/cpu/isolated 2>/dev/null
-echo "120" > /proc/sys/kernel/hung_task_timeout_secs 2>/dev/null  # Set reasonable timeout for stability
+echo "120" > /proc/sys/kernel/hung_task_timeout_secs 2>/dev/null
 
 # Scheduler Tuning
 [ -d /dev/stune/top-app ] && {
-    echo "0" > /dev/stune/top-app/schedtune.boost 2>/dev/null  # Reduce boost for stability
-    echo "1" > /dev/stune/top-app/schedtune.prefer_idle 2>/dev/null  # Prefer idle for better scheduling
+    echo "0" > /dev/stune/top-app/schedtune.boost 2>/dev/null
+    echo "1" > /dev/stune/top-app/schedtune.prefer_idle 2>/dev/null
 }
 
 # Enhanced scheduler features (kernel 4.9+, may not be available on all devices)
@@ -749,20 +762,6 @@ disable_gpu_debug() {
     if [ -d /sys/kernel/debug/tracing/events/sde ]; then
         echo "0" > /sys/kernel/debug/tracing/events/sde/enable 2>/dev/null
     fi
-}
-
-configure_common_tweaks() {
-    optimize_logcat
-    disable_tracing_and_logging
-    optimize_graphics
-    optimize_module_params
-    optimize_kernel_logging
-    optimize_memory_cache
-    disable_gpu_debug
-    tune_io_scheduler
-    tune_kernel_stability
-    optimize_deep_sleep
-    optimize_gms_doze
 }
 
 tune_io_scheduler() {
