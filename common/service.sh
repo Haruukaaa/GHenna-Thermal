@@ -113,31 +113,6 @@ optimize_gms_doze() {
     su -c "am force-stop $gms_pkg" >/dev/null 2>&1
 }
 
-disable_tracing_and_logging() {
-    local commands=(
-        "accessibility stop-trace"
-        "migard dump-trace false"
-        "migard start-trace false"
-        "migard stop-trace true"
-        "migard trace-buffer-size 0"
-        "input_method tracing stop"
-        "window tracing size 0"
-        "window tracing stop"
-        "statusbar tracing stop"
-        "memory_trace disable"
-        "animation tracing stop"
-        "net_utils tracing disable"
-        "graphics tracing stop"
-        "package tracing stop"
-        "wm tracing stop"
-        "activity tracing stop"
-        "broadcast tracing disable"
-    )
-    for cmd_str in "${commands[@]}"; do
-        cmd $cmd_str 2>/dev/null
-    done
-}
-
     # Aggressive Logcat + Kernel Stability Optimization
     optimize_logcat() {
         # Safe sysfs/proc writer (best-effort)
@@ -201,6 +176,11 @@ disable_tracing_and_logging() {
             [ -e "$path" ] || return 0
             [ -w "$path" ] || chmod 0644 "$path" 2>/dev/null || true
             printf "%s" "$val" > "$path" 2>/dev/null || true
+            local proc
+            for proc in "surfaceflinger" "android.hardware.graphics.composer" "RenderThread" "audioserver" "system_server"; do
+            change_task_nice "$proc" "-10"
+            change_task_affinity "$proc" "ff"
+    done
         }
 
         safe_setprop() {
@@ -329,7 +309,7 @@ kill_memory_hogs() {
     done
 }
 
-# Check for LMKD daemon (Android 11+) and monitor RAM levels
+# Check for LMKD daemon and monitor RAM levels
 check_lmkd() {
     local lmkd_pid ram_total_kb avail_kb used_kb used_pct threshold_kb=262144 threshold_pct=70
 
@@ -442,9 +422,7 @@ disable_thermal_throttling() {
         [ -w "$cd/cur_state" ] && echo "0" > "$cd/cur_state" 2>/dev/null || true
     done
 }
-# ============================================================
 # Charging Limit Control
-# ============================================================
 set_charge_limit() {
     local limit_ma=$1
     local path="/sys/class/power_supply/battery/constant_charge_current_max"
@@ -476,9 +454,7 @@ get_device_max_charge_limit() {
     printf '%s' "$limit_ma"
 }
 
-# ============================================================
 # Charging Mode Selector
-# ============================================================
 set_charge_mode() {
     local mode=$1
     local max_limit
@@ -500,9 +476,7 @@ set_charge_mode() {
     esac
 }
 
-# ============================================================
 # Temperature-Aware Charging
-# ============================================================
 set_temp_aware_charge() {
     local temp_path="/sys/class/power_supply/battery/temp"
     local temp_raw temp_c max_limit
@@ -548,7 +522,7 @@ echo "120" > /proc/sys/kernel/hung_task_timeout_secs 2>/dev/null
     echo "1" > /dev/stune/top-app/schedtune.prefer_idle 2>/dev/null
 }
 
-# Enhanced scheduler features (kernel 4.9+, may not be available on all devices)
+# Enhanced scheduler features
 if [ -f /sys/kernel/debug/sched_features ]; then
     # NEXT_BUDDY: Improve cache locality
     echo "NEXT_BUDDY" > /sys/kernel/debug/sched_features 2>/dev/null
@@ -580,14 +554,14 @@ disable_panic_handling() {
     write_safe /sys/module/kernel/parameters/pause_on_oops 0
     write_safe /sys/module/kernel/panic_on_rcu_stall 0
 
-    # Pattern-based disables: any kernel/module parameter containing "panic" or "pause_on_oops"
+    # disables any kernel/module parameter containing "panic" or "pause_on_oops"
     for f in /proc/sys/kernel/*panic* /sys/module/*/parameters/*panic* /sys/module/*/parameters/*pause_on_oops*; do
         if [ -f "$f" ]; then
             echo "0" > "$f" 2>/dev/null || true
         fi
     done
 
-    # Best-effort: disable soft/hard watchdog/lockup panic knobs if present
+    # disable soft/hard watchdog/lockup panic knobs if present
     for f in "/proc/sys/kernel/soft_watchdog" "/proc/sys/kernel/soft_lockup_panic" "/proc/sys/kernel/hard_lockup_panic"; do
         [ -f "$f" ] && echo "0" > "$f" 2>/dev/null || true
     done
@@ -607,14 +581,14 @@ disable_panic_handling() {
             fi
         }
 
-        # Disable I/O debugging for existing block devices (iterate actual devices)
+        # Disable I/O debugging for existing block devices
         for devpath in /sys/block/*; do
             [ -d "$devpath" ] || continue
             dev="$(basename "$devpath")"
             safe_sys_write "/sys/block/${dev}/queue/iostats" "0"
 
             # Enhanced I/O optimizations
-            # Set I/O scheduler to bfq if available, else noop for SSD-like performance
+            # Set I/O scheduler to bfq, else noop for SSD-like performance
             if [ -f "/sys/block/${dev}/queue/scheduler" ]; then
                 if grep -q "bfq" "/sys/block/${dev}/queue/scheduler" 2>/dev/null; then
                     echo "bfq" > "/sys/block/${dev}/queue/scheduler" 2>/dev/null || true
@@ -632,7 +606,7 @@ disable_panic_handling() {
             # Disable entropy contribution from I/O for performance
             safe_sys_write "/sys/block/${dev}/queue/add_random" "0"
 
-            # Assume SSD (rotational=0) for modern devices
+            # Assume SSD for modern devices
             safe_sys_write "/sys/block/${dev}/queue/rotational" "0"
 
             # Reduce I/O latency
@@ -721,46 +695,58 @@ disable_panic_handling() {
 
 # DRI and GPU Debug Disables & GPU Optimization
 disable_gpu_debug() {
-    # DRI debug - Primary and secondary devices
-    [ -f /sys/kernel/debug/dri/0/debug/enable ] && echo "0" > /sys/kernel/debug/dri/0/debug/enable 2>/dev/null
-    [ -f /sys/kernel/debug/dri/1/debug/enable ] && echo "0" > /sys/kernel/debug/dri/1/debug/enable 2>/dev/null
-    [ -f /sys/kernel/debug/dri/128/debug/enable ] && echo "0" > /sys/kernel/debug/dri/128/debug/enable 2>/dev/null
-    
+    local path event_dir
+
+    disable_if() {
+        [ -e "$1" ] || return 0
+        printf "%s" "$2" > "$1" 2>/dev/null || true
+    }
+
+    # Disable all DRI debug targets
+    for path in /sys/kernel/debug/dri/*/debug/enable; do
+        [ -f "$path" ] && disable_if "$path" 0
+    done
+
     # Spurious IRQ debug
-    [ -f /sys/module/spurious/parameters/noirqdebug ] && echo "1" > /sys/module/spurious/parameters/noirqdebug 2>/dev/null
-    
-    # SDE rotator event logging
-    [ -f /sys/kernel/debug/sde_rotator0/evtlog/enable ] && echo "0" > /sys/kernel/debug/sde_rotator0/evtlog/enable 2>/dev/null
-    [ -f /sys/kernel/debug/sde_rotator1/evtlog/enable ] && echo "0" > /sys/kernel/debug/sde_rotator1/evtlog/enable 2>/dev/null
-    
-    # Disable GPU tracing
-    [ -f /sys/kernel/debug/gpu/enable ] && echo "0" > /sys/kernel/debug/gpu/enable 2>/dev/null
-    [ -f /sys/kernel/debug/graphics/enable ] && echo "0" > /sys/kernel/debug/graphics/enable 2>/dev/null
-    
-    # Disable HWComposer debugging
-    [ -f /sys/kernel/debug/hwcomposer/disable_debug ] && echo "1" > /sys/kernel/debug/hwcomposer/disable_debug 2>/dev/null
-    [ -f /sys/kernel/debug/hwcomposer/enable ] && echo "0" > /sys/kernel/debug/hwcomposer/enable 2>/dev/null
-    
-    # Disable GPU memory debugging
-    [ -f /sys/kernel/debug/gpumemdebug ] && echo "0" > /sys/kernel/debug/gpumemdebug 2>/dev/null
-    [ -f /sys/kernel/debug/gpu/memtrack ] && echo "0" > /sys/kernel/debug/gpu/memtrack 2>/dev/null
-    
-    # Disable display pipeline debugging
-    [ -f /sys/kernel/debug/sde ] && echo "0" > /sys/kernel/debug/sde 2>/dev/null
-    [ -f /sys/kernel/debug/sde/stats ] && echo "0" > /sys/kernel/debug/sde/stats 2>/dev/null
-    
-    # Disable fence debug
-    [ -f /sys/kernel/debug/sync/fence_timeline ] && echo "0" > /sys/kernel/debug/sync/fence_timeline 2>/dev/null
-    
-    # Disable MMU debug
-    [ -f /sys/kernel/debug/gpu/mmu ] && echo "0" > /sys/kernel/debug/gpu/mmu 2>/dev/null
-    
-    # Disable ftrace GPU events
-    if [ -d /sys/kernel/debug/tracing/events/gpu ]; then
-        echo "0" > /sys/kernel/debug/tracing/events/gpu/enable 2>/dev/null
-    fi
-    if [ -d /sys/kernel/debug/tracing/events/sde ]; then
-        echo "0" > /sys/kernel/debug/tracing/events/sde/enable 2>/dev/null
+    disable_if /sys/module/spurious/parameters/noirqdebug 1
+
+    # Disable GPU/graphics debug nodes
+    disable_if /sys/kernel/debug/gpu/enable 0
+    disable_if /sys/kernel/debug/graphics/enable 0
+    disable_if /sys/kernel/debug/gpumemdebug 0
+    disable_if /sys/kernel/debug/gpu/memtrack 0
+    disable_if /sys/kernel/debug/gpu/mmu 0
+    disable_if /sys/kernel/debug/hwcomposer/disable_debug 1
+    disable_if /sys/kernel/debug/hwcomposer/enable 0
+    disable_if /sys/kernel/debug/sde 0
+    disable_if /sys/kernel/debug/sde/stats 0
+    disable_if /sys/kernel/debug/sde_rotator0/evtlog/enable 0
+    disable_if /sys/kernel/debug/sde_rotator1/evtlog/enable 0
+    disable_if /sys/kernel/debug/sync/fence_timeline 0
+
+    # Disable Qualcomm / Adreno GPU module debug knobs
+    disable_if /sys/module/kgsl/parameters/debug_mask 0
+    disable_if /sys/module/kgsl/parameters/debug_level 0
+    disable_if /sys/module/kgsl/parameters/gpu_debug 0
+    disable_if /sys/module/adreno/parameters/debug 0
+    disable_if /sys/module/adreno/parameters/ctx_debug 0
+
+    # Disable tracing events for GPU and display subsystems
+    for event_dir in \
+        /sys/kernel/debug/tracing/events/gpu \
+        /sys/kernel/debug/tracing/events/sde \
+        /sys/kernel/debug/tracing/events/drm \
+        /sys/kernel/debug/tracing/events/hwcomposer \
+        /sys/kernel/debug/tracing/events/graphics \
+        /sys/kernel/debug/tracing/events/ion; do
+        [ -d "$event_dir" ] && disable_if "$event_dir/enable" 0
+    done
+
+    # Disable global tracing if available
+    if [ -d /sys/kernel/debug/tracing ]; then
+        disable_if /sys/kernel/debug/tracing/tracing_on 0
+        disable_if /sys/kernel/debug/tracing/current_tracer nop
+        disable_if /sys/kernel/debug/tracing/events/enable 0
     fi
 }
 
@@ -801,60 +787,7 @@ tune_kernel_stability() {
     safe_sys_write /proc/sys/kernel/hard_lockup_panic 0
 }
 
-boost_game_processes() {
-    local proc
-    for proc in "surfaceflinger" "android.hardware.graphics.composer" "RenderThread" "audioserver" "system_server"; do
-        change_task_nice "$proc" "-10"
-        change_task_affinity "$proc" "ff"
-    done
-}
-
-apply_daily_tweaks() {
-    safe_sys_write /proc/sys/vm/swappiness 60
-    safe_sys_write /proc/sys/vm/vfs_cache_pressure 100
-    safe_sys_write /proc/sys/vm/dirty_ratio 15
-    safe_sys_write /proc/sys/vm/dirty_background_ratio 5
-    settings put global low_power_mode 1 >/dev/null 2>&1
-    settings put global wifi_sleep_policy 2 >/dev/null 2>&1
-    settings put global mobile_data_always_on 0 >/dev/null 2>&1
-    settings put global wifi_always_on 0 >/dev/null 2>&1
-    settings put global background_data 0 >/dev/null 2>&1
-    settings put global auto_sync 0 >/dev/null 2>&1
-    boost_game_processes
-}
-
-apply_gaming_tweaks() {
-    safe_sys_write /proc/sys/vm/swappiness 20
-    safe_sys_write /proc/sys/vm/dirty_ratio 10
-    safe_sys_write /proc/sys/vm/dirty_background_ratio 5
-    settings put global low_power_mode 0 >/dev/null 2>&1
-    settings put global wifi_sleep_policy 0 >/dev/null 2>&1
-    settings put global mobile_data_always_on 1 >/dev/null 2>&1
-    settings put global wifi_always_on 1 >/dev/null 2>&1
-    settings put global background_data 1 >/dev/null 2>&1
-    boost_game_processes
-}
-
-apply_battery_tweaks() {
-    safe_sys_write /proc/sys/vm/swappiness 80
-    safe_sys_write /proc/sys/vm/vfs_cache_pressure 200
-    safe_sys_write /proc/sys/vm/dirty_ratio 15
-    safe_sys_write /proc/sys/vm/dirty_background_ratio 5
-    settings put global low_power_mode 1 >/dev/null 2>&1
-    settings put global wifi_sleep_policy 2 >/dev/null 2>&1
-    settings put global mobile_data_always_on 0 >/dev/null 2>&1
-    settings put global wifi_always_on 0 >/dev/null 2>&1
-    settings put global background_data 0 >/dev/null 2>&1
-    settings put global auto_sync 0 >/dev/null 2>&1
-    disable_tracing_and_logging
-    pm trim-caches 999999999 >/dev/null 2>&1
-}
-
 main() {
-    configure_common_tweaks
-    apply_mode_tweaks
-    su -lp 2000 -c "cmd notification post -S bigtext -t 'Angela' Tag 'Ulalaaaa... I got your back!'"
+    su -lp 2000 -c "cmd notification post -S bigtext -t 'Angela' Tag 'Ulalaaaa... I got your board!'"
 }
-
-main "$@"
 exit 0
