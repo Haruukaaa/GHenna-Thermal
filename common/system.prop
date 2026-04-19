@@ -1,10 +1,6 @@
 # QuickPower
 ro.config.hw_quickpoweron=true
 
-# Texture Cache
-ro.hwui.texture_cache_flushrate=0.6
-ro.texture_atlas_cache_override=0.25
-
 # Memory Optimization
 ro.vendor.qti.sys.fw.bservice_enable=true
 ro.vendor.qti.sys.fw.bservice_limit=60
