@@ -1,7 +1,5 @@
 #!/system/bin/sh
 #
-# Install script: sets up service and daemon for multiple root managers
-#
 
 # Paths to possible service directories
 INITD_PATH="/system/etc/init.d"
@@ -23,9 +21,9 @@ install_to_dir "$APATCH_PATH"
 print_modname() {
   ui_print "      Welcome to Ghenna Tweaks  ʕ⁠·⁠ᴥ⁠·⁠ʔ     "
   sleep 1
-  ui_print "Codename           : Rikuhachima Aru               "
+  ui_print "Subject Project    : Angela"
   sleep 1
-  ui_print "Created            : Hirauki"
+  ui_print "Developer          : Hirauki"
   sleep 1
   ui_print "Publisher          : Hirauki"
   sleep 1
@@ -70,12 +68,10 @@ print_modname() {
     ui_print " [■■■■■■■■■□] 90%  "
     sleep 2
     ui_print " [■■■■■■■■■■] 100% "
-  sleep 1
-  ui_print "                    D O N E     !!!!                    "
-  sleep 1
-  ui_print "               "
-  busybox sleep 1
-  ui_print "                  R E B O O T                         "
+    sleep 1
+    ui_print "                  D O N E   !!!!                        "
+    sleep 1
+    ui_print "                                                        "
 }
 
 on_install() {
@@ -98,7 +94,7 @@ on_install() {
         echo "Installed service.sh and daemon.sh into $target"
     fi
   sleep 2
-  ui_print "- Installation completed successfully"
+  ui_print " Installation completed, ready to reboot "
 }
 
 # Only some special files require specific permissions
