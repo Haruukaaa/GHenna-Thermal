@@ -6,7 +6,20 @@
 # Path to battery temperature and charge limit
 TEMP_PATH="/sys/class/power_supply/battery/temp"
 LIMIT_PATH="/sys/class/power_supply/battery/constant_charge_current_max"
+CAPACITY_PATH="/sys/class/power_supply/battery/charge_full_design"
 SLEEP=30
+
+# Get max charging capacity (fallback to standard values if unavailable)
+get_max_capacity() {
+    if [ -r "$CAPACITY_PATH" ]; then
+        max_cap=$(cat "$CAPACITY_PATH" 2>/dev/null || echo "")
+        if [ -n "$max_cap" ] && [ "$max_cap" -gt 0 ]; then
+            echo "$max_cap"
+            return 0
+        fi
+    fi
+    echo "9000"  # fallback default
+}
 
 exit_handler() {
     echo "daemon: exiting"
@@ -50,18 +63,22 @@ while true; do
 
     temp_c=$((temp_raw / 10))  # convert tenths °C -> °C
 
-    if [ "$temp_c" -ge 60 ]; then
+    # Get device max charging capacity
+    max_capacity=$(get_max_capacity)
+
+    # Scale charging based on device capacity and temperature
+    if [ "$temp_c" -ge 65 ]; then
         current_mA=0
-        note="charging disabled"
+        note="charging disabled (critical)"
+    elif [ "$temp_c" -ge 60 ]; then
+        current_mA=$((max_capacity / 5))  # 20% of max capacity
+        note="~20% (reduced - hot)"
     elif [ "$temp_c" -ge 50 ]; then
-        current_mA=4000
-        note="~18W (approx)"
-    elif [ "$temp_c" -ge 45 ]; then
-        current_mA=4500
-        note="~45W (approx)"
+        current_mA=$((max_capacity / 2))  # 50% of max capacity
+        note="~50% (moderate)"
     else
-        current_mA=9000
-        note="high-speed charging (cool condition)"
+        current_mA=$max_capacity  # 100% of max capacity
+        note="100% (high-speed - cool)"
     fi
 
     current_uA=$((current_mA * 1000))
