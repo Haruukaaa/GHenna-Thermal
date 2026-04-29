@@ -422,67 +422,114 @@ disable_thermal_throttling() {
         [ -w "$cd/cur_state" ] && echo "0" > "$cd/cur_state" 2>/dev/null || true
     done
 }
+# Battery Power Supply Path
+BATTERY_CHARGE_CURRENT_PATH="/sys/class/power_supply/battery/constant_charge_current_max"
+BATTERY_CHARGE_VOLTAGE_PATH="/sys/class/power_supply/battery/constant_charge_voltage_max"
+BATTERY_TEMP_PATH="/sys/class/power_supply/battery/temp"
+
 # Charging Limit Control
 set_charge_limit() {
     local limit_ma=$1
-    local path="/sys/class/power_supply/battery/constant_charge_current_max"
 
-    if [ -w "$path" ]; then
-        echo $((limit_ma * 1000)) > "$path" 2>/dev/null || true
+    if [ -z "$BATTERY_CHARGE_CURRENT_PATH" ] || [ ! -w "$BATTERY_CHARGE_CURRENT_PATH" ]; then
+        return 1
     fi
+
+    # Convert mA to µA (multiply by 1000)
+    echo $((limit_ma * 1000)) > "$BATTERY_CHARGE_CURRENT_PATH" 2>/dev/null || true
 }
 
+# Get Device Max Charge Limit
 get_device_max_charge_limit() {
-    local path="/sys/class/power_supply/battery/constant_charge_current_max"
-    local limit_ma=6000
-    local raw
-
-    if [ -r "$path" ]; then
-        raw=$(cat "$path" 2>/dev/null || echo "")
+    local limit_ma=5000  # Safe default
+    local raw max_detected voltage_mv current_ma calculated_power
+    
+    # Try to read actual maximum from sysfs
+    if [ -r "$BATTERY_CHARGE_CURRENT_PATH" ]; then
+        raw=$(cat "$BATTERY_CHARGE_CURRENT_PATH" 2>/dev/null || echo "")
         case "$raw" in
-            ''|*[!0-9]*)
-                ;;
+            ''|*[!0-9]*) ;;
             *)
-                raw=$((raw / 1000))
-                if [ "$raw" -gt "$limit_ma" ]; then
-                    limit_ma="$raw"
+                max_detected=$((raw / 1000))  # Convert µA back to mA
+                if [ "$max_detected" -gt 0 ] && [ "$max_detected" -le 15000 ]; then
+                    limit_ma="$max_detected"
                 fi
                 ;;
         esac
     fi
 
+    # Cross-check with voltage to calculate power capability
+    if [ -r "$BATTERY_CHARGE_VOLTAGE_PATH" ]; then
+        voltage_mv=$(cat "$BATTERY_CHARGE_VOLTAGE_PATH" 2>/dev/null || echo "")
+        case "$voltage_mv" in
+            ''|*[!0-9]*) ;;
+            *)
+                voltage_mv=$((voltage_mv / 1000))  # Convert µV to mV
+                current_ma=$limit_ma
+                # Calculate power: (Voltage in V) × (Current in A) = Watts
+                # (voltage_mv / 1000) × (current_ma / 1000) = watts
+                calculated_power=$(( (voltage_mv * current_ma) / 1000000 ))
+                
+                # Cap at reasonable max: 120W for modern devices
+                if [ "$calculated_power" -gt 120 ]; then
+                    limit_ma=$(( (120 * 1000000) / voltage_mv ))
+                fi
+                ;;
+        esac
+    fi
+
+    # Ensure we have a valid result within safe bounds (1000-15000 mA)
+    if [ "$limit_ma" -lt 1000 ]; then
+        limit_ma=1000
+    elif [ "$limit_ma" -gt 15000 ]; then
+        limit_ma=15000
+    fi
+
     printf '%s' "$limit_ma"
 }
 
-# Charging Mode Selector
+# Charging Mode Kernel-Based
 set_charge_mode() {
-    local mode=$1
-    local max_limit
+    local temp_raw temp_c max_limit
 
-    case "$mode" in
-        balanced)
-            set_charge_limit 3000   # ~33W
-            echo "Charging mode set to BALANCED (~33W)"
-            ;;
-        fast)
-            max_limit=$(get_device_max_charge_limit)
+    if [ -r "$BATTERY_TEMP_PATH" ]; then
+        temp_raw=$(cat "$BATTERY_TEMP_PATH" 2>/dev/null || echo "")
+        case "$temp_raw" in
+            ''|*[!0-9]*)
+                echo "Battery temp unreadable: '$temp_raw'"
+                return 1
+                ;;
+        esac
+
+        temp_c=$((temp_raw / 10))   # convert to °C
+        max_limit=$(get_device_max_charge_limit)
+
+        if [ "$temp_c" -ge 60 ]; then
+            set_charge_limit 0
+            echo "Charging mode: DISABLED (Battery temp ${temp_c}°C - critical)"
+        elif [ "$temp_c" -ge 50 ]; then
+            set_charge_limit 4000
+            echo "Charging mode: REDUCED (~18W) (Battery temp ${temp_c}°C)"
+        elif [ "$temp_c" -ge 45 ]; then
+            set_charge_limit 4500
+            echo "Charging mode: MODERATE (~45W) (Battery temp ${temp_c}°C)"
+        else
             set_charge_limit "$max_limit"
-            echo "Charging mode set to FAST (~${max_limit}mA)"
-            ;;
-        *)
-            echo "Unknown mode: $mode"
-            echo "Available modes: balanced, fast"
-            ;;
-    esac
+            echo "Charging mode: OPTIMAL (~${max_limit}mA) (Battery temp ${temp_c}°C)"
+        fi
+    else
+        echo "Temperature sensor unavailable; following kernel defaults"
+        max_limit=$(get_device_max_charge_limit)
+        set_charge_limit "$max_limit"
+    fi
 }
 
 # Temperature-Aware Charging
 set_temp_aware_charge() {
-    local temp_path="/sys/class/power_supply/battery/temp"
     local temp_raw temp_c max_limit
 
-    if [ -r "$temp_path" ]; then
-        temp_raw=$(cat "$temp_path" 2>/dev/null || echo "")
+    if [ -r "$BATTERY_TEMP_PATH" ]; then
+        temp_raw=$(cat "$BATTERY_TEMP_PATH" 2>/dev/null || echo "")
         case "$temp_raw" in
             ''|*[!0-9]*)
                 echo "Battery temp unreadable: '$temp_raw'"
